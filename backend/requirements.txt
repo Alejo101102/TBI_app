@@ -1,0 +1,37 @@
+# ─── API ──────────────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+
+# ─── NIfTI / neuroimaging ─────────────────────────────────────────────────────
+nibabel==5.3.2
+nilearn==0.10.4        # required by cnn_model.py (resample_img)
+numpy==1.26.4
+
+# ─── ML / classifiers ─────────────────────────────────────────────────────────
+# PyTorch CPU base — if a NVIDIA GPU is available at runtime,
+# torch.cuda.is_available() returns True automatically (deepmriprep receives
+# no_gpu=not is_available()).
+torch==2.3.1+cpu
+torchvision==0.18.1+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+scikit-learn==1.5.2
+joblib==1.4.2
+
+# ─── VBM preprocessing (replacement for SPM12+DARTEL) ─────────────────────────
+# deepmriprep: brain extraction + tissue segmentation + MNI registration + modulation,
+# everything built on PyTorch (cross-platform reproducible — the reason we moved from SPM12).
+deepmriprep==0.2.0
+antspyx==0.5.4         # deepmriprep dependency for resampling
+
+# ─── nnU-Net segmentation (epileptogenic-zone localization model) ─────────────
+# 3D fullres pipeline with transfer learning from the TBI model (Castaño 2025).
+# CPU inference works but is slow (~15-30 min); with NVIDIA GPU <60s.
+nnunetv2==2.5.1
+SimpleITK==2.4.0       # NIfTI I/O used internally by nnU-Net
+
+# ─── Utilities ────────────────────────────────────────────────────────────────
+pydantic==2.9.2
+scipy==1.13.1
+pandas==2.2.3

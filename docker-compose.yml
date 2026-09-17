@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# VBM App — Docker Compose
+#
+# Usage:
+#   docker compose up --build         # first time
+#   docker compose up                 # subsequent runs
+#   docker compose down               # tear down
+#
+# Current pipeline: deepmriprep (pure PyTorch) + CNN MedicalNet ResNet-18.
+# (SPM12 + MCR R2024b discarded during migration due to cross-platform
+#  irreproducibility — see Dockerfile and app/pipelines/deepmriprep_pipeline.py)
+#
+# Heavy assets (NOT in git — mounted from the host):
+#   backend/models/  → deepmriprep_cnn_fold3.pt  (~130 MB, CNN model)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vbm_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # CNN model mounted from the host (not baked into the image)
+      - ./backend/models:/app/models:ro
+      # Processing scratch directory (read/write)
+      - ./backend/tmp:/app/tmp
+    environment:
+      - ROBEX_DIR=/opt/ROBEX
+      # ── Diagnostic flags ─────────────────────────────────────────────────
+      # KEEP_TMP_FILES=true → does not delete /app/tmp/<job_id>/ on completion
+      #                       (useful to inspect intermediate mwp1*.nii.gz)
+      - KEEP_TMP_FILES=true
+    # No GPU: comment out or remove the deploy block
+    # With NVIDIA GPU: uncomment (requires nvidia-container-toolkit on the host)
+    # deepmriprep auto-detects GPU via torch.cuda.is_available()
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: unless-stopped
+    # Healthcheck disabled: nnUNet CPU inference blocks the main thread for
+    # 5-7 min, which caused /health to not respond in time and Docker to
+    # restart the container mid-inference. For a single-user app it brings
+    # no value — the frontend already polls /status.
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vbm_frontend
+    ports:
+      - "3000:80"       # Nginx serves the React build on internal port 80
+    depends_on:
+      - backend
+    restart: unless-stopped

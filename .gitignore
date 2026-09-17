@@ -1,0 +1,41 @@
+# Modelos y templates pesados
+backend/models/nnunet_ideas_fold_all/*.pth
+backend/models/*.pth
+backend/models/*.pt
+backend/models/*.pkl
+backend/models/nnunet_weights/
+backend/dartel_templates/*.nii
+backend/dartel_templates/*.mat
+
+# SPM Standalone y MCR (van en Docker, no en git)
+backend/spm_standalone/
+backend/mcr/
+
+backend/tmp/
+
+backend/vendor/*.zip
+backend/vendor/*.tar.gz
+
+# Temporales de procesamiento
+backend/tmp/
+*.nii.tmp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

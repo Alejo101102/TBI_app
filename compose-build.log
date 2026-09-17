@@ -1,0 +1,415 @@
+time="2026-06-01T21:30:47-05:00" level=warning msg="C:\\Users\\Usuario\\OneDrive - correounivalle.edu.co\\Documentos\\Proyectos Github\\TG2\\VBM_App\\vbm-app\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image vbm-app-frontend Building 
+ Image vbm-app-backend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.29kB 0.0s done
+#1 DONE 0.0s
+
+#2 [frontend internal] load build definition from Dockerfile
+#2 transferring dockerfile: 866B done
+#2 DONE 0.1s
+
+#3 [backend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 6.63kB done
+#3 DONE 0.1s
+
+#4 [backend internal] load metadata for docker.io/library/ubuntu:22.04
+#4 ...
+
+#5 [auth] library/ubuntu:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [frontend internal] load metadata for docker.io/library/nginx:alpine
+#6 DONE 0.5s
+
+#7 [frontend internal] load metadata for docker.io/library/node:20-alpine
+#7 DONE 0.6s
+
+#8 [frontend internal] load .dockerignore
+#8 transferring context: 2B done
+#8 DONE 0.0s
+
+#9 [frontend builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.0s done
+#9 sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 7.67kB / 7.67kB done
+#9 sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb 1.72kB / 1.72kB done
+#9 sha256:11cedc39e663e7c5d5cb9cc77a461a0d2adc25537b94e6831a6108f09cb2001b 6.52kB / 6.52kB done
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0B / 3.86MB 0.1s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 0B / 43.23MB 0.1s
+#9 ...
+
+#4 [backend internal] load metadata for docker.io/library/ubuntu:22.04
+#4 DONE 1.2s
+
+#9 [frontend builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 ...
+
+#10 [backend internal] load .dockerignore
+#10 transferring context: 2B done
+#10 DONE 0.1s
+
+#11 [backend  1/13] FROM docker.io/library/ubuntu:22.04@sha256:4f838adc7181d9039ac795a7d0aba05a9bd9ecd480d294483169c5def983b64d
+#11 DONE 0.0s
+
+#9 [frontend builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 1.05MB / 3.86MB 0.7s
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 2.10MB / 3.86MB 0.8s
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.15MB / 3.86MB 0.9s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 3.15MB / 43.23MB 0.9s
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 1.0s
+#9 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 1.0s done
+#9 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 6.29MB / 43.23MB 1.3s
+#9 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0B / 1.26MB 1.3s
+#9 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 0B / 445B 1.4s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 9.44MB / 43.23MB 1.6s
+#9 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 1.26MB / 1.26MB 1.6s done
+#9 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 445B / 445B 1.5s done
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 12.58MB / 43.23MB 2.0s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 15.73MB / 43.23MB 2.3s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 18.87MB / 43.23MB 2.7s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 22.02MB / 43.23MB 3.1s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 25.17MB / 43.23MB 3.5s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 29.36MB / 43.23MB 4.0s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 32.51MB / 43.23MB 4.4s
+#9 ...
+
+#12 [frontend internal] load build context
+#12 transferring context: 42.23MB 4.7s done
+#12 DONE 4.8s
+
+#9 [frontend builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 36.70MB / 43.23MB 4.8s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 39.85MB / 43.23MB 5.0s
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 5.3s
+#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287
+#9 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 5.3s done
+#9 ...
+
+#13 [frontend stage-1 1/3] FROM docker.io/library/nginx:alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a
+#13 resolve docker.io/library/nginx:alpine@sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a 0.0s done
+#13 sha256:8b1e78743a03dbb2c95171cc58639fef29abc8816598e27fb910ed2e621e589a 10.33kB / 10.33kB done
+#13 sha256:da954fb959a34e2195e6bf622e6396bf338f99e0fe6d8e641b302d9aaa1f0645 12.41kB / 12.41kB done
+#13 sha256:abaae85d1626e429b3f1209aea369c0af9562cc06b5e075c006e0f699bba35f2 1.88MB / 1.88MB 0.7s done
+#13 sha256:31db9045b34376493fd4fb695d8a8d03bbfffaf6297fcde82d0f925ce2dd329a 2.50kB / 2.50kB done
+#13 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 1.0s done
+#13 sha256:43f834d60d8af3f133c7e76a202d28cd62cc026a561edca72ee752ef01bfaacd 628B / 628B 1.2s done
+#13 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0.3s done
+#13 sha256:de1b677d8c003ce9e558f3a0cd4dec3c035f424ecddd68063043a593ad572257 957B / 957B 1.2s done
+#13 sha256:94d083cf706ab544ec7e9bcaba5c164db87b3d3a56176bf2fca440d535c16b0d 405B / 405B 1.3s done
+#13 extracting sha256:abaae85d1626e429b3f1209aea369c0af9562cc06b5e075c006e0f699bba35f2 0.2s done
+#13 sha256:e654dbbbb9e15a1fa035d24728aeeb60bc655f4ebd4d6215a496b77a7d104697 1.21kB / 1.21kB 1.7s done
+#13 sha256:a5008f4a4b257356728e2feaf2b5b9e2054c0c577d324e76abbf14470b5f1cfd 1.40kB / 1.40kB 1.8s done
+#13 sha256:fbaed3f7fcbe6a0d591ac8601934f1f05252cee42741fde9e950dce55580af18 20.28MB / 20.28MB 4.5s done
+#13 extracting sha256:43f834d60d8af3f133c7e76a202d28cd62cc026a561edca72ee752ef01bfaacd done
+#13 extracting sha256:de1b677d8c003ce9e558f3a0cd4dec3c035f424ecddd68063043a593ad572257 done
+#13 extracting sha256:94d083cf706ab544ec7e9bcaba5c164db87b3d3a56176bf2fca440d535c16b0d done
+#13 extracting sha256:e654dbbbb9e15a1fa035d24728aeeb60bc655f4ebd4d6215a496b77a7d104697 done
+#13 extracting sha256:a5008f4a4b257356728e2feaf2b5b9e2054c0c577d324e76abbf14470b5f1cfd done
+#13 extracting sha256:fbaed3f7fcbe6a0d591ac8601934f1f05252cee42741fde9e950dce55580af18 1.0s done
+#13 DONE 6.2s
+
+#9 [frontend builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#9 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 3.1s done
+#9 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122
+#9 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0.1s done
+#9 extracting sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096
+#9 extracting sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 done
+#9 DONE 9.0s
+
+#14 [backend internal] load build context
+#14 ...
+
+#15 [frontend builder 2/6] WORKDIR /app
+#15 DONE 0.5s
+
+#14 [backend internal] load build context
+#14 ...
+
+#16 [frontend builder 3/6] COPY package.json package-lock.json* ./
+#16 DONE 0.1s
+
+#14 [backend internal] load build context
+#14 transferring context: 148.64MB 9.1s
+#14 transferring context: 156.09MB 9.4s done
+#14 DONE 9.5s
+
+#17 [backend  2/13] RUN apt-get update && apt-get install -y --no-install-recommends     wget curl unzip ca-certificates     libxt6 libxmu6 libgl1 libglu1-mesa     libxrender1 libxtst6 libxi6     zlib1g     python3.11 python3.11-dev python3-pip     bc     && apt-get clean     && rm -rf /var/lib/apt/lists/*
+#17 CACHED
+
+#18 [backend  4/13] RUN mkdir -p /tmp/mcr_install &&     wget -q --show-progress         "https://ssd.mathworks.com/supportfiles/downloads/R2019b/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019b_Update_9_glnxa64.zip"         -O /tmp/mcr_install/mcr.zip &&     unzip -q /tmp/mcr_install/mcr.zip -d /tmp/mcr_install &&     /tmp/mcr_install/install -mode silent -agreeToLicense yes         -destinationFolder /opt/mcr &&     rm -rf /tmp/mcr_install
+#18 CACHED
+
+#19 [backend  8/13] RUN tar -xzf /tmp/robex.tar.gz -C /opt &&     chmod +x /opt/ROBEX/runROBEX.sh &&     chmod +x /opt/ROBEX/ROBEX &&     rm /tmp/robex.tar.gz
+#19 CACHED
+
+#20 [backend  3/13] RUN ln -sf /usr/bin/python3.11 /usr/bin/python3  && ln -sf /usr/bin/python3.11 /usr/bin/python
+#20 CACHED
+
+#21 [backend  6/13] RUN mkdir -p /opt/spm12_standalone &&     unzip -q /tmp/spm12_r7771.zip -d /tmp/spm_extract &&     mv /tmp/spm_extract/spm12/* /opt/spm12_standalone/ &&     chmod +x /opt/spm12_standalone/run_spm12.sh &&     chmod +x /opt/spm12_standalone/spm12 &&     rm -rf /tmp/spm_extract /tmp/spm12_r7771.zip
+#21 CACHED
+
+#22 [backend  7/13] COPY vendor/ROBEXv12.linux64.tar.gz /tmp/robex.tar.gz
+#22 CACHED
+
+#23 [backend  5/13] COPY vendor/spm12_r7771.zip /tmp/spm12_r7771.zip
+#23 CACHED
+
+#24 [backend  9/13] WORKDIR /app
+#24 CACHED
+
+#25 [backend 10/13] COPY requirements.txt .
+#25 DONE 0.0s
+
+#26 [frontend builder 4/6] RUN npm install
+#26 ...
+
+#27 [backend 11/13] RUN pip install --upgrade pip &&     pip install --no-cache-dir -r requirements.txt
+#27 1.716 Requirement already satisfied: pip in /usr/lib/python3/dist-packages (22.0.2)
+#27 2.061 Collecting pip
+#27 2.239   Downloading pip-26.1.2-py3-none-any.whl (1.8 MB)
+#27 2.439      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 9.2 MB/s eta 0:00:00
+#27 2.454 Installing collected packages: pip
+#27 2.454   Attempting uninstall: pip
+#27 2.455     Found existing installation: pip 22.0.2
+#27 2.457     Not uninstalling pip at /usr/lib/python3/dist-packages, outside environment /usr
+#27 2.458     Can't uninstall 'pip'. No files were found to uninstall.
+#27 3.227 Successfully installed pip-26.1.2
+#27 3.228 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#27 3.733 Looking in indexes: https://pypi.org/simple, https://download.pytorch.org/whl/cpu
+#27 4.638 Collecting fastapi==0.115.5 (from -r requirements.txt (line 2))
+#27 4.759   Downloading fastapi-0.115.5-py3-none-any.whl.metadata (27 kB)
+#27 5.066 Collecting uvicorn==0.32.1 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 5.092   Downloading uvicorn-0.32.1-py3-none-any.whl.metadata (6.6 kB)
+#27 5.415 Collecting python-multipart==0.0.12 (from -r requirements.txt (line 4))
+#27 5.457   Downloading python_multipart-0.0.12-py3-none-any.whl.metadata (1.9 kB)
+#27 5.786 Collecting nibabel==5.3.2 (from -r requirements.txt (line 7))
+#27 5.816   Downloading nibabel-5.3.2-py3-none-any.whl.metadata (9.1 kB)
+#27 6.190 Collecting nilearn==0.10.4 (from -r requirements.txt (line 8))
+#27 6.219   Downloading nilearn-0.10.4-py3-none-any.whl.metadata (7.8 kB)
+#27 7.321 Collecting numpy==1.26.4 (from -r requirements.txt (line 9))
+#27 7.350   Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+#27 8.058 Collecting torch==2.3.1+cpu (from -r requirements.txt (line 12))
+#27 8.605   Downloading torch-2.3.1%2Bcpu-cp311-cp311-linux_x86_64.whl (190.4 MB)
+#27 15.76      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 190.4/190.4 MB 26.8 MB/s  0:00:07
+#27 16.56 Collecting torchvision==0.18.1+cpu (from -r requirements.txt (line 13))
+#27 16.79   Downloading torchvision-0.18.1%2Bcpu-cp311-cp311-linux_x86_64.whl (1.6 MB)
+#27 16.87      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 21.3 MB/s  0:00:00
+#27 17.28 Collecting scikit-learn==1.5.2 (from -r requirements.txt (line 16))
+#27 17.37   Downloading scikit_learn-1.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (13 kB)
+#27 17.81 Collecting joblib==1.4.2 (from -r requirements.txt (line 17))
+#27 17.84   Downloading joblib-1.4.2-py3-none-any.whl.metadata (5.4 kB)
+#27 18.29 Collecting pydantic==2.9.2 (from -r requirements.txt (line 20))
+#27 18.31   Downloading pydantic-2.9.2-py3-none-any.whl.metadata (149 kB)
+#27 18.79 Collecting scipy==1.13.1 (from -r requirements.txt (line 21))
+#27 18.82   Downloading scipy-1.13.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+#27 19.30 Collecting pandas==2.2.3 (from -r requirements.txt (line 22))
+#27 19.33   Downloading pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (89 kB)
+#27 19.50 Collecting starlette<0.42.0,>=0.40.0 (from fastapi==0.115.5->-r requirements.txt (line 2))
+#27 19.53   Downloading starlette-0.41.3-py3-none-any.whl.metadata (6.0 kB)
+#27 19.70 Collecting typing-extensions>=4.8.0 (from fastapi==0.115.5->-r requirements.txt (line 2))
+#27 19.73   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+#27 20.05 Collecting annotated-types>=0.6.0 (from pydantic==2.9.2->-r requirements.txt (line 20))
+#27 20.08   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+#27 21.04 Collecting pydantic-core==2.23.4 (from pydantic==2.9.2->-r requirements.txt (line 20))
+#27 21.07   Downloading pydantic_core-2.23.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+#27 21.37 Collecting click>=7.0 (from uvicorn==0.32.1->uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 21.39   Downloading click-8.4.1-py3-none-any.whl.metadata (2.6 kB)
+#27 21.71 Collecting h11>=0.8 (from uvicorn==0.32.1->uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 21.74   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#27 22.11 Collecting importlib-resources>=5.12 (from nibabel==5.3.2->-r requirements.txt (line 7))
+#27 22.14   Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+#27 22.46 Collecting packaging>=20 (from nibabel==5.3.2->-r requirements.txt (line 7))
+#27 22.49   Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+#27 22.98 Collecting lxml (from nilearn==0.10.4->-r requirements.txt (line 8))
+#27 23.01   Downloading lxml-6.1.1-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+#27 23.35 Collecting requests>=2.25.0 (from nilearn==0.10.4->-r requirements.txt (line 8))
+#27 23.37   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+#27 23.86 Collecting filelock (from torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 23.88   Downloading filelock-3.29.0-py3-none-any.whl.metadata (2.0 kB)
+#27 24.31 Collecting sympy (from torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 24.34   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+#27 24.83 Collecting networkx (from torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 24.87   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+#27 25.19 Collecting jinja2 (from torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 25.22   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+#27 25.52 Collecting fsspec (from torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 25.55   Downloading fsspec-2026.4.0-py3-none-any.whl.metadata (10 kB)
+#27 26.61 Collecting pillow!=8.3.*,>=5.3.0 (from torchvision==0.18.1+cpu->-r requirements.txt (line 13))
+#27 26.65   Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+#27 26.99 Collecting threadpoolctl>=3.1.0 (from scikit-learn==1.5.2->-r requirements.txt (line 16))
+#27 27.03   Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+#27 27.33 Collecting python-dateutil>=2.8.2 (from pandas==2.2.3->-r requirements.txt (line 22))
+#27 27.37   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+#27 27.70 Collecting pytz>=2020.1 (from pandas==2.2.3->-r requirements.txt (line 22))
+#27 27.73   Downloading pytz-2026.2-py2.py3-none-any.whl.metadata (22 kB)
+#27 28.04 Collecting tzdata>=2022.7 (from pandas==2.2.3->-r requirements.txt (line 22))
+#27 28.07   Downloading tzdata-2026.2-py2.py3-none-any.whl.metadata (1.4 kB)
+#27 28.39 Collecting httptools>=0.6.3 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 28.42   Downloading httptools-0.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+#27 28.73 Collecting python-dotenv>=0.13 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 28.76   Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+#27 29.06 Collecting pyyaml>=5.1 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 29.09   Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+#27 29.43 Collecting uvloop!=0.15.0,!=0.15.1,>=0.14.0 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 29.47   Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+#27 29.81 Collecting watchfiles>=0.13 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 29.84   Downloading watchfiles-1.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+#27 30.27 Collecting websockets>=10.4 (from uvicorn[standard]==0.32.1->-r requirements.txt (line 3))
+#27 30.30   Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+#27 30.60 Collecting anyio<5,>=3.4.0 (from starlette<0.42.0,>=0.40.0->fastapi==0.115.5->-r requirements.txt (line 2))
+#27 30.62   Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+#27 30.98 Collecting idna>=2.8 (from anyio<5,>=3.4.0->starlette<0.42.0,>=0.40.0->fastapi==0.115.5->-r requirements.txt (line 2))
+#27 31.00   Downloading idna-3.17-py3-none-any.whl.metadata (6.4 kB)
+#27 31.36 Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas==2.2.3->-r requirements.txt (line 22))
+#27 31.38   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+#27 31.75 Collecting charset_normalizer<4,>=2 (from requests>=2.25.0->nilearn==0.10.4->-r requirements.txt (line 8))
+#27 31.78   Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+#27 32.13 Collecting urllib3<3,>=1.26 (from requests>=2.25.0->nilearn==0.10.4->-r requirements.txt (line 8))
+#27 32.16   Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+#27 32.52 Collecting certifi>=2023.5.7 (from requests>=2.25.0->nilearn==0.10.4->-r requirements.txt (line 8))
+#27 32.56   Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+#27 32.85 Collecting MarkupSafe>=2.0 (from jinja2->torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 32.87   Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+#27 33.24 Collecting mpmath<1.4,>=1.1.0 (from sympy->torch==2.3.1+cpu->-r requirements.txt (line 12))
+#27 33.28   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+#27 33.31 Downloading fastapi-0.115.5-py3-none-any.whl (94 kB)
+#27 33.36 Downloading pydantic-2.9.2-py3-none-any.whl (434 kB)
+#27 33.42 Downloading uvicorn-0.32.1-py3-none-any.whl (63 kB)
+#27 33.45 Downloading python_multipart-0.0.12-py3-none-any.whl (23 kB)
+#27 33.48 Downloading nibabel-5.3.2-py3-none-any.whl (3.3 MB)
+#27 33.62    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 24.5 MB/s  0:00:00
+#27 33.65 Downloading nilearn-0.10.4-py3-none-any.whl (10.4 MB)
+#27 34.04    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 27.6 MB/s  0:00:00
+#27 34.07 Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.3 MB)
+#27 34.71    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 28.6 MB/s  0:00:00
+#27 34.74 Downloading scikit_learn-1.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.3 MB)
+#27 35.25    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.3/13.3 MB 26.2 MB/s  0:00:00
+#27 35.28 Downloading joblib-1.4.2-py3-none-any.whl (301 kB)
+#27 35.33 Downloading scipy-1.13.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (38.6 MB)
+#27 36.82    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 38.6/38.6 MB 26.0 MB/s  0:00:01
+#27 36.90 Downloading pandas-2.2.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.1 MB)
+#27 37.37    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.1/13.1 MB 27.8 MB/s  0:00:00
+#27 37.42 Downloading pydantic_core-2.23.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+#27 37.49    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 35.3 MB/s  0:00:00
+#27 37.53 Downloading starlette-0.41.3-py3-none-any.whl (73 kB)
+#27 37.58 Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+#27 37.63 Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+#27 37.69 Downloading click-8.4.1-py3-none-any.whl (116 kB)
+#27 37.73 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#27 37.76 Downloading httptools-0.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (464 kB)
+#27 37.81 Downloading idna-3.17-py3-none-any.whl (65 kB)
+#27 37.88 Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+#27 37.92 Downloading packaging-26.2-py3-none-any.whl (100 kB)
+#27 37.96 Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+#27 38.21    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 29.0 MB/s  0:00:00
+#27 38.29 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+#27 38.38 Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+#27 38.42 Downloading pytz-2026.2-py2.py3-none-any.whl (510 kB)
+#27 38.49 Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+#27 38.53    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 42.4 MB/s  0:00:00
+#27 38.59 Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+#27 38.63 Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
+#27 38.69 Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+#27 38.72 Downloading certifi-2026.5.20-py3-none-any.whl (134 kB)
+#27 38.76 Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+#27 38.81 Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+#27 38.89 Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+#27 38.92 Downloading tzdata-2026.2-py2.py3-none-any.whl (349 kB)
+#27 38.99 Downloading uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.8 MB)
+#27 39.12    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.8/3.8 MB 29.7 MB/s  0:00:00
+#27 39.15 Downloading watchfiles-1.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+#27 39.20 Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB)
+#27 39.30 Downloading filelock-3.29.0-py3-none-any.whl (39 kB)
+#27 39.33 Downloading fsspec-2026.4.0-py3-none-any.whl (203 kB)
+#27 39.38 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+#27 39.41 Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+#27 39.44 Downloading lxml-6.1.1-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+#27 39.63    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 27.7 MB/s  0:00:00
+#27 39.68 Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+#27 39.76    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 28.5 MB/s  0:00:00
+#27 39.83 Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+#27 40.03    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 32.0 MB/s  0:00:00
+#27 40.08 Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+#27 40.10    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 36.5 MB/s  0:00:00
+#27 40.39 Installing collected packages: pytz, mpmath, websockets, uvloop, urllib3, tzdata, typing-extensions, threadpoolctl, sympy, six, pyyaml, python-multipart, python-dotenv, pillow, packaging, numpy, networkx, MarkupSafe, lxml, joblib, importlib-resources, idna, httptools, h11, fsspec, filelock, click, charset_normalizer, certifi, annotated-types, uvicorn, scipy, requests, python-dateutil, pydantic-core, nibabel, jinja2, anyio, watchfiles, torch, starlette, scikit-learn, pydantic, pandas, torchvision, nilearn, fastapi
+#27 68.37 
+#27 68.37 Successfully installed MarkupSafe-3.0.3 annotated-types-0.7.0 anyio-4.13.0 certifi-2026.5.20 charset_normalizer-3.4.7 click-8.4.1 fastapi-0.115.5 filelock-3.29.0 fsspec-2026.4.0 h11-0.16.0 httptools-0.8.0 idna-3.17 importlib-resources-7.1.0 jinja2-3.1.6 joblib-1.4.2 lxml-6.1.1 mpmath-1.3.0 networkx-3.6.1 nibabel-5.3.2 nilearn-0.10.4 numpy-1.26.4 packaging-26.2 pandas-2.2.3 pillow-12.2.0 pydantic-2.9.2 pydantic-core-2.23.4 python-dateutil-2.9.0.post0 python-dotenv-1.2.2 python-multipart-0.0.12 pytz-2026.2 pyyaml-6.0.3 requests-2.34.2 scikit-learn-1.5.2 scipy-1.13.1 six-1.17.0 starlette-0.41.3 sympy-1.14.0 threadpoolctl-3.6.0 torch-2.3.1+cpu torchvision-0.18.1+cpu typing-extensions-4.15.0 tzdata-2026.2 urllib3-2.7.0 uvicorn-0.32.1 uvloop-0.22.1 watchfiles-1.2.0 websockets-16.0
+#27 68.37 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#27 DONE 69.6s
+
+#26 [frontend builder 4/6] RUN npm install
+#26 ...
+
+#28 [backend 12/13] COPY app/ ./app/
+#28 DONE 0.1s
+
+#29 [backend 13/13] RUN mkdir -p /app/tmp && chmod 777 /app/tmp
+#29 DONE 0.6s
+
+#26 [frontend builder 4/6] RUN npm install
+#26 ...
+
+#30 [backend] exporting to image
+#30 exporting layers
+#30 exporting layers 8.2s done
+#30 writing image sha256:e8bcf63a6ed06a0f6be62420dc35a6dfb07e2d5d2bbe764e726b2b66b4a7cdea done
+#30 naming to docker.io/library/vbm-app-backend 0.0s done
+#30 DONE 8.2s
+
+#31 [backend] resolving provenance for metadata file
+#31 DONE 0.0s
+
+#26 [frontend builder 4/6] RUN npm install
+#26 313.5 
+#26 313.5 added 66 packages, and audited 67 packages in 5m
+#26 313.5 
+#26 313.5 9 packages are looking for funding
+#26 313.5   run `npm fund` for details
+#26 313.5 
+#26 313.5 found 0 vulnerabilities
+#26 313.5 npm notice
+#26 313.5 npm notice New major version of npm available! 10.8.2 -> 11.16.0
+#26 313.5 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.16.0
+#26 313.5 npm notice To update run: npm install -g npm@11.16.0
+#26 313.5 npm notice
+#26 DONE 313.6s
+
+#32 [frontend builder 5/6] COPY . .
+#32 DONE 1.3s
+
+#33 [frontend builder 6/6] RUN npm run build
+#33 0.529 
+#33 0.529 > vbm-app-frontend@0.1.0 build
+#33 0.529 > vite build
+#33 0.529 
+#33 0.896 vite v6.4.3 building for production...
+#33 0.972 transforming...
+#33 1.988 ✓ 44 modules transformed.
+#33 2.143 rendering chunks...
+#33 2.155 computing gzip size...
+#33 2.173 dist/index.html                                     0.71 kB │ gzip:  0.41 kB
+#33 2.173 dist/assets/Multimedia-y-visin-logo-Hwq8wuWF.png   11.76 kB
+#33 2.173 dist/assets/logo-uv-CKXk8gDM.png                  120.70 kB
+#33 2.174 dist/assets/index-C0I6r3sp.css                     11.51 kB │ gzip:  3.07 kB
+#33 2.174 dist/assets/index-CYrf2Mqq.js                     191.04 kB │ gzip: 58.98 kB
+#33 2.174 ✓ built in 1.25s
+#33 DONE 2.2s
+
+#34 [frontend stage-1 2/3] COPY --from=builder /app/dist /usr/share/nginx/html
+#34 DONE 0.0s
+
+#35 [frontend stage-1 3/3] COPY nginx.conf /etc/nginx/conf.d/default.conf
+#35 DONE 0.0s
+
+#36 [frontend] exporting to image
+#36 exporting layers 0.0s done
+#36 writing image sha256:eb1ca4b8d17f20303ae327bcb295a31faae394a086ed53524e467732c3daf112 done
+#36 naming to docker.io/library/vbm-app-frontend done
+#36 DONE 0.1s
+
+#37 [frontend] resolving provenance for metadata file
+#37 DONE 0.0s
+ Image vbm-app-backend Built 
+ Image vbm-app-frontend Built 
+EXIT=0
