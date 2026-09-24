@@ -1,21 +1,15 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # VBM App — Backend Dockerfile
 # Base: Ubuntu 22.04 LTS
-# Pipeline: deepmriprep (PyTorch puro) + CNN MedicalNet ResNet-18
-#
-# CAMBIO HISTÓRICO: anteriormente se usaba SPM12 r7771 Standalone + MCR R2024b.
-# Se descartó por irreproducibilidad cross-platform (~28k voxeles de diferencia
-# en mwp1 entre macOS y Linux con el MISMO algoritmo SPM12). Ahora se usa
-# deepmriprep, basado en redes neuronales PyTorch — bit-reproducible across OS.
+# Pipeline: 3D nnU-Net (segmentación de zonas epileptogénicas)
 #
 # ROBEX se mantiene como paso opcional (toggle del frontend `use_robex`) para
-# usuarios que prefieren skull-stripping explícito antes de deepmriprep
-# (deepmriprep internamente ya hace brain extraction con deepbet, así que ROBEX
-# es estrictamente opcional). Por defecto OFF.
+# usuarios que prefieren skull-stripping explícito antes de la inferencia.
+# Por defecto OFF.
 #
 # CPU por defecto. Si el host tiene GPU NVIDIA y nvidia-container-toolkit
-# instalado, deepmriprep detecta GPU automáticamente vía torch.cuda.is_available()
-# (no_gpu=not torch.cuda.is_available() en la llamada a run_preprocess).
+# instalado, nnUNetPredictor detecta GPU automáticamente vía
+# torch.cuda.is_available().
 # ─────────────────────────────────────────────────────────────────────────────
 FROM ubuntu:22.04
 
@@ -33,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 python3.11-dev python3-pip \
     # ROBEX (skull stripping opcional)
     bc \
-    # Librerías que antspyx puede necesitar
+    # Librerías requeridas por PyTorch/nnU-Net
     libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -61,18 +55,11 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# ─── Pre-cargar pesos de deepmriprep ──────────────────────────────────────────
-# deepmriprep descarga sus modelos (deepbet, segmentación UNet 3D, sSYMNet) en
-# el primer uso. Forzamos la descarga durante el build para que la primera
-# inferencia no dependa de red y sea rápida.
-RUN python -c "from deepmriprep.preprocess import Preprocess; Preprocess(no_gpu=True)" || \
-    echo "WARN: pre-carga de modelos deepmriprep falló — descargarán en primer run"
-
 # ─── Código de la aplicación ──────────────────────────────────────────────────
 COPY app/ ./app/
 
-# Modelos del CNN: se montan como volumen en docker-compose.yml
-# - deepmriprep_cnn_fold3.pt (mejor fold, ver cnn_model.py para métricas)
+# Modelos de nnU-Net: se montan como volumen en docker-compose.yml
+# (checkpoint_best.pth, plans.json, dataset.json — ver app/config.py)
 
 # ─── Directorio temporal de procesamiento ─────────────────────────────────────
 RUN mkdir -p /app/tmp && chmod 777 /app/tmp
@@ -80,7 +67,7 @@ RUN mkdir -p /app/tmp && chmod 777 /app/tmp
 # ─── Entrypoint ───────────────────────────────────────────────────────────────
 EXPOSE 8000
 
-# --workers 1: deepmriprep + CNN tienen estado (modelos cargados en memoria)
+# --workers 1: el predictor nnU-Net tiene estado (modelo cargado en memoria)
 #              y el polling JOBS dict es in-memory
 # --timeout-keep-alive 300: jobs pueden tardar varios minutos
 CMD ["uvicorn", "app.main:app", \

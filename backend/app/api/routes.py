@@ -100,23 +100,12 @@ _load_snapshot_on_start()
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 def _steps_for_model(model: ModelType) -> list[ProcessStep]:
     """Return the list of steps for the selected model."""
-    base = [
+    return [
         ProcessStep(step=1, name="Cargando imagen T1",       status=StepStatus.PENDING),
         ProcessStep(step=2, name="Extracción de cráneo · ROBEX", status=StepStatus.PENDING),
-        ProcessStep(step=3, name="Preprocesamiento VBM · deepmriprep", status=StepStatus.PENDING),
+        ProcessStep(step=3, name="Segmentación nnUNet",       status=StepStatus.PENDING),
+        ProcessStep(step=4, name="Análisis de máscara",       status=StepStatus.PENDING),
     ]
-    if model == ModelType.DEEPMRIPREP:
-        return base + [
-            ProcessStep(step=4, name="Clasificación CNN",    status=StepStatus.PENDING),
-        ]
-    elif model == ModelType.NNUNET:
-        return [
-            ProcessStep(step=1, name="Cargando imagen T1",       status=StepStatus.PENDING),
-            ProcessStep(step=2, name="Extracción de cráneo · ROBEX", status=StepStatus.PENDING),
-            ProcessStep(step=3, name="Segmentación nnUNet",       status=StepStatus.PENDING),
-            ProcessStep(step=4, name="Análisis de máscara",       status=StepStatus.PENDING),
-        ]
-    return base
 
 
 def _update_step(job_id: str, step_num: int, status: StepStatus, msg: str = None):
@@ -185,8 +174,7 @@ async def _run_analysis(job_id: str, nii_path: Path, model: ModelType,
         _update_step(job_id, 1, StepStatus.COMPLETED)
 
         # ── Step 2: Optional skull stripping (controlled by use_robex) ─────
-        # Default (use_robex=False): the T1 is passed directly to deepmriprep
-        # — deepmriprep performs brain extraction internally with deepbet.
+        # Default (use_robex=False): the T1 is passed directly to nnUNet.
         # If use_robex=True: ROBEX is applied beforehand (useful when the
         # user already has a T1 with skull and prefers an explicit classic
         # skull-stripping).
@@ -197,15 +185,10 @@ async def _run_analysis(job_id: str, nii_path: Path, model: ModelType,
         brain_path = skull_strip(t1_path, job_id, skip_robex=not use_robex)
         _update_step(job_id, 2, StepStatus.COMPLETED,
                      "Skull stripping ROBEX aplicado" if use_robex
-                     else "T1 pasa directamente a deepmriprep")
+                     else "T1 pasa directamente a nnUNet")
 
         # ── Following steps depend on the selected model ───────────────────
-        if model == ModelType.DEEPMRIPREP:
-            from app.pipelines.deepmriprep_pipeline import run as run_dmp
-            result = await asyncio.to_thread(run_dmp, brain_path, job_id,
-                                             _update_step, metadata)
-
-        elif model == ModelType.NNUNET:
+        if model == ModelType.NNUNET:
             from app.pipelines.nnunet import run as run_nnunet
             result = await asyncio.to_thread(run_nnunet, brain_path, job_id,
                                              _update_step, metadata)
@@ -282,30 +265,17 @@ def _generate_report(job_id: str, result: AnalysisResult):
         sep_dash,
     ]
 
-    # ── CLASSIFICATION block (only if there is a prediction) ──────────────
+    # ── CLASSIFICATION block (prediction derived from the mask) ────────────
     if result.prediction is not None:
         lines += [
-            "  RESULTADO (clasificación)",
+            "  RESULTADO (clasificación derivada de la segmentación)",
             _row("Predicción",
                  "POSIBLE EPILEPSIA" if result.prediction == "epilepsy" else "CONTROL"),
             _row("Confianza",        _pct(result.confidence)),
             _row("P(Epilepsia)",     _pct(result.prob_epilepsy)),
             _row("P(Control)",       _pct(result.prob_control)),
             sep_dash,
-            "  MÉTRICAS DEL MODELO (validación · fold 3, deepmriprep + CNN)",
-            _row("AUC-ROC",          _pct(result.model_auc)),
-            _row("Sensibilidad",     _pct(result.model_sensitivity)),
-            _row("Especificidad",    _pct(result.model_specificity)),
-            _row("Exactitud",        _pct(result.model_accuracy)),
         ]
-        if result.gm_volume_cm3:
-            lines += [
-                sep_dash,
-                "  FEATURES VOLUMÉTRICOS",
-                _row("Volumen GM",       f"{result.gm_volume_cm3:.2f} cm³"),
-                _row("Densidad GM",      f"{result.gm_mean_density:.4f}"),
-                _row("Vóxeles GM",       f"{result.gm_voxels:,}"),
-            ]
 
     # ── SEGMENTATION block (only if there is a mask) ──────────────────────
     if result.mask_filename is not None:
@@ -398,19 +368,13 @@ def get_assets_status():
     to show a clear message ("contact the author to receive the weights").
 
     Returns a flat dict per model with a boolean and the list of missing
-    files. nnUNet has 4 required files; deepmriprep_cnn is a single .pt.
-    ROBEX is the optional skull-stripping binary.
+    files. nnUNet has 3 required files. ROBEX is the optional skull-stripping
+    binary.
     """
     checks = validate_assets()
-    deepmriprep_ok = bool(checks.get("cnn_model", False))
-    nnunet_files = ["nnunet_checkpoint", "nnunet_plans",
-                    "nnunet_dataset", "nnunet_fingerprint"]
+    nnunet_files = ["nnunet_checkpoint", "nnunet_plans", "nnunet_dataset"]
     nnunet_missing = [k for k in nnunet_files if not checks.get(k)]
     return {
-        "deepmriprep": {
-            "ready": deepmriprep_ok,
-            "missing": [] if deepmriprep_ok else ["deepmriprep_cnn_fold3_script.pt"],
-        },
         "nnunet": {
             "ready": len(nnunet_missing) == 0,
             "missing": nnunet_missing,
@@ -445,15 +409,8 @@ async def analyze(
     # mid-pipeline. Returns 503 with a clear message so the frontend can
     # display it to the user.
     assets = validate_assets()
-    if model == ModelType.DEEPMRIPREP and not assets.get("cnn_model"):
-        raise HTTPException(
-            status_code=503,
-            detail="Modelo deepmriprep no disponible: el peso no está en el servidor. "
-                   "Solicítelo a kevin.alejandro.velez@correounivalle.edu.co",
-        )
     if model == ModelType.NNUNET and not all(assets.get(k) for k in
-            ("nnunet_checkpoint", "nnunet_plans",
-             "nnunet_dataset", "nnunet_fingerprint")):
+            ("nnunet_checkpoint", "nnunet_plans", "nnunet_dataset")):
         raise HTTPException(
             status_code=503,
             detail="Modelo nnUNet no disponible: faltan archivos del modelo en el servidor. "

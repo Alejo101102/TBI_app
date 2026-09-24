@@ -6,12 +6,11 @@
 #   docker compose up                 # subsequent runs
 #   docker compose down               # tear down
 #
-# Current pipeline: deepmriprep (pure PyTorch) + CNN MedicalNet ResNet-18.
-# (SPM12 + MCR R2024b discarded during migration due to cross-platform
-#  irreproducibility — see Dockerfile and app/pipelines/deepmriprep_pipeline.py)
+# Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
 #
 # Heavy assets (NOT in git — mounted from the host):
-#   backend/models/  → deepmriprep_cnn_fold3.pt  (~130 MB, CNN model)
+#   backend/models/nnunet_ideas_fold_all/ → checkpoint_best.pth, plans.json,
+#                                            dataset.json (~235 MB total)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -24,7 +23,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # CNN model mounted from the host (not baked into the image)
+      # nnU-Net model mounted from the host (not baked into the image)
       - ./backend/models:/app/models:ro
       # Processing scratch directory (read/write)
       - ./backend/tmp:/app/tmp
@@ -36,7 +35,7 @@ services:
       - KEEP_TMP_FILES=true
     # No GPU: comment out or remove the deploy block
     # With NVIDIA GPU: uncomment (requires nvidia-container-toolkit on the host)
-    # deepmriprep auto-detects GPU via torch.cuda.is_available()
+    # nnUNetPredictor auto-detects GPU via torch.cuda.is_available()
     # deploy:
     #   resources:
     #     reservations:

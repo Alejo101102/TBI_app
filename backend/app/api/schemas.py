@@ -8,13 +8,7 @@ from enum import Enum
 
 
 class ModelType(str, Enum):
-    DEEPMRIPREP = "deepmriprep"   # previously SPM12_DARTEL (discarded due to cross-platform irreproducibility)
-    NNUNET      = "nnunet"        # 3D nnU-Net segmentation (transfer learning from the TBI model)
-    # HYBRID was discarded — global volumetric features added no discriminative
-    # signal on top of deepmriprep maps (p=0.24 vs p<0.001 with SPM12).
-    # The architecture w_CNN * P(CNN) + w_SVM * P(SVM) yielded w_CNN=1.00 →
-    # fusion collapses to the CNN alone. Documented in the thesis as an
-    # experimental finding.
+    NNUNET = "nnunet"   # 3D nnU-Net segmentation (transfer learning from the TBI model)
 
 
 # ─── Request (multipart, the .nii/.gz arrives as UploadFile in the route) ────
@@ -25,10 +19,9 @@ class AnalysisMetadata(BaseModel):
     notes:        Optional[str] = Field(None, description="Notas clínicas")
     model:        ModelType     = Field(..., description="Pipeline a ejecutar")
     use_robex:    bool          = Field(False, description=(
-        "Aplicar ROBEX skull stripping antes de SPM12. Por defecto False — "
-        "el pipeline de entrenamiento pasa la T1 cruda directamente a SPM12. "
-        "Activar solo si la T1 viene ya con cráneo eliminado o por elección "
-        "metodológica del usuario."
+        "Aplicar ROBEX skull stripping antes de la inferencia. Por defecto "
+        "False. Activar solo si la T1 viene con cráneo y se prefiere una "
+        "extracción morfológica explícita antes de nnUNet."
     ))
 
 
@@ -68,23 +61,11 @@ class AnalysisResult(BaseModel):
     # ("model_*" is usually reserved). Without this, every startup prints warnings.
     model_config = ConfigDict(protected_namespaces=())
 
-    # ── Prediction (CLASSIFICATION: deepmriprep) ─────────────────────────────
-    # Optional because the segmentation model (nnUNet) does not produce these.
+    # ── Prediction derived from the segmentation mask ─────────────────────────
     prediction:        Optional[Literal["epilepsy", "control"]] = None
     confidence:        Optional[float] = Field(None, ge=0.0, le=1.0)
     prob_epilepsy:     Optional[float] = Field(None, ge=0.0, le=1.0)
     prob_control:      Optional[float] = Field(None, ge=0.0, le=1.0)
-
-    # ── Reported model metrics (classification) ──────────────────────────────
-    model_auc:         Optional[float] = None
-    model_sensitivity: Optional[float] = None
-    model_specificity: Optional[float] = None
-    model_accuracy:    Optional[float] = None
-
-    # ── Subject volumetric features (classification) ─────────────────────────
-    gm_volume_cm3:     Optional[float] = None
-    gm_mean_density:   Optional[float] = None
-    gm_voxels:         Optional[int]   = None
 
     # ── SEGMENTATION output (nnUNet) ─────────────────────────────────────────
     # mask_filename: name of the .nii.gz inside tmp/<job_id>/nnunet_out/

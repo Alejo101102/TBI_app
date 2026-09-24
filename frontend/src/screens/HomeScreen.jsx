@@ -60,11 +60,10 @@ const HomeScreen = ({ onSelect, assets }) => {
           return (
           <div
             key={m.id}
-            className={`mcard${m.recommended ? ' rec' : ''}${ready ? '' : ' disabled'}`}
+            className={`mcard${ready ? '' : ' disabled'}`}
             onClick={ready ? () => onSelect(m) : undefined}
             title={ready ? undefined : t('home.modelUnavailable')}
           >
-            {m.recommended && ready && <div className="rec-lbl">{t('home.recommended')}</div>}
             {!ready && <div className="rec-lbl rec-lbl-bad">{t('home.unavailableBadge')}</div>}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div

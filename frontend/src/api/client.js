@@ -3,10 +3,9 @@
 
 const API_BASE = '/api/v1';
 
-// The backend expects ModelType ∈ { deepmriprep, nnunet }.
+// The backend expects ModelType ∈ { nnunet }.
 // The frontend ids match 1:1 with the backend ids.
 const MODEL_ID_MAP = {
-  deepmriprep: 'deepmriprep',
   nnunet: 'nnunet',
 };
 
@@ -61,7 +60,7 @@ export const getMaskURL = (jobId) => `${API_BASE}/mask/${jobId}`;
 // GET /assets — reports which weights and optional tools are present on
 // disk. The frontend calls this at startup to disable model cards or the
 // ROBEX toggle when an asset is missing.
-//   { deepmriprep: {ready, missing}, nnunet: {ready, missing}, robex: {ready} }
+//   { nnunet: {ready, missing}, robex: {ready} }
 export const getAssetsStatus = async () => {
   const response = await fetch(`${API_BASE}/assets`);
   if (!response.ok) throw new Error(await parseError(response));

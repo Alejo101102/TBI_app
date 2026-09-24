@@ -1,22 +1,15 @@
 """
 robex.py — Skull stripping with ROBEX (OPTIONAL step)
 
-CRITICAL DESIGN DECISION:
-  The training pipeline (run_vbm_spm12_checkpoint.m on the iMac) passed the
-  T1 DIRECTLY to SPM12 Unified Segmentation without prior skull stripping.
-  SPM12 performs its own brain extraction internally.
-
-  Adding ROBEX before SPM12 at inference time produces GM maps that differ
-  from the training ones (~28,000 extra voxels for sub-102), which degrades
-  the CNN predictions.
+DESIGN DECISION:
+  The nnU-Net training pipeline (Dataset500_IDEAS_Epilepsy) passed the raw T1
+  directly to nnU-Net without prior skull stripping. Applying ROBEX at
+  inference time would feed the model an image that differs from what it
+  was trained on.
 
   THEREFORE: skull_strip() returns the raw T1 by default (skip_robex=True).
-  ROBEX would only be used if the model were retrained in the future with
-  ROBEX as an explicit prior step.
-
-  The function is kept implemented so we don't break the backend or frontend
-  architecture (which displays "Extracción de cráneo · ROBEX" as a step).
-  In the UI that step completes instantly with the correct message.
+  The frontend `use_robex` toggle lets the user opt into ROBEX explicitly
+  when their T1 needs it for other reasons (e.g. visual inspection).
 """
 
 import time
@@ -31,22 +24,20 @@ def skull_strip(t1_path: Path, job_id: str,
     Skull-stripping step of the pipeline.
 
     By default skip_robex=True: returns the original T1 unmodified.
-    This exactly replicates the training pipeline (SPM12 direct).
+    This exactly replicates the nnU-Net training pipeline (raw T1 direct).
 
     Args:
         t1_path:    Path to the input .nii (already decompressed).
         job_id:     Job ID (for logging).
         skip_robex: If True (default), returns t1_path unmodified.
-                    SPM12 Unified Segmentation performs its own brain
-                    extraction internally — no prior ROBEX is required.
 
     Returns:
-        Path to the image that will enter SPM12 (raw or stripped).
+        Path to the image that will enter nnU-Net (raw or stripped).
     """
     t1_path = Path(t1_path)
 
     if skip_robex:
-        print(f"[ROBEX] Paso omitido — T1 pasa directamente a SPM12 "
+        print(f"[ROBEX] Paso omitido — T1 pasa directamente a nnUNet "
               f"(replica pipeline de entrenamiento)")
         return t1_path
 

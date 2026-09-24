@@ -10,8 +10,6 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 
-from app.config import TMP_DIR, VBM_PARAMS
-
 
 # ─── Validation and loading ──────────────────────────────────────────────────
 
@@ -123,67 +121,3 @@ def get_image_info(nii_path: Path) -> dict:
         "dtype":      str(img.get_data_dtype()),
         "affine_ok":  not np.allclose(img.affine, np.eye(4)),
     }
-
-
-# ─── Volumetric features from mwp1 ───────────────────────────────────────────
-
-def extract_volumetric_features(gm_map_path: Path) -> dict:
-    """
-    Extract scalar features from the modulated GM map (mwp1) produced by SPM12.
-    These features feed the SVM in the hybrid pipeline.
-
-    The 0.1 threshold is the same one used in the MATLAB training script
-    (run_vbm_spm12_checkpoint.m, Phase 4).
-
-    Returns:
-        dict with gm_volume_mm3, gm_volume_cm3, gm_mean_density,
-        gm_std_density, gm_voxels, percentiles and shape.
-    """
-    threshold = VBM_PARAMS["gm_threshold"]  # 0.1
-
-    img  = nib.load(str(gm_map_path))
-    data = np.asarray(img.dataobj, dtype=np.float32)
-
-    # Voxel size in mm
-    vox     = np.sqrt(np.sum(img.affine[:3, :3] ** 2, axis=0))
-    vox_vol = float(np.prod(vox))
-
-    # GM mask
-    mask    = data > threshold
-    n_vox   = int(np.sum(mask))
-
-    if n_vox == 0:
-        raise ValueError(
-            f"No se encontraron vóxeles GM por encima del umbral {threshold}. "
-            "Verifica que el mapa GM sea válido."
-        )
-
-    gm_vals   = data[mask]
-    gm_vol    = n_vox * vox_vol
-
-    features = {
-        "gm_volume_mm3":    round(gm_vol, 2),
-        "gm_volume_cm3":    round(gm_vol / 1000, 4),
-        "gm_mean_density":  float(np.mean(gm_vals)),
-        "gm_std_density":   float(np.std(gm_vals)),
-        "gm_voxels":        n_vox,
-        "gm_p10":           float(np.percentile(gm_vals, 10)),
-        "gm_p25":           float(np.percentile(gm_vals, 25)),
-        "gm_p50":           float(np.percentile(gm_vals, 50)),
-        "gm_p75":           float(np.percentile(gm_vals, 75)),
-        "gm_p90":           float(np.percentile(gm_vals, 90)),
-        "gm_max":           float(np.max(gm_vals)),
-        "shape":            data.shape,
-        "voxel_size_mm":    tuple(round(float(v), 3) for v in vox),
-    }
-
-    # Verify the expected shape
-    expected = tuple(VBM_PARAMS["expected_shape"])
-    if data.shape != expected:
-        # Not fatal — only a warning, may differ due to bb
-        features["shape_warning"] = (
-            f"Shape {data.shape} difiere del esperado {expected}. "
-            "Verifica los parámetros de normalización."
-        )
-
-    return features

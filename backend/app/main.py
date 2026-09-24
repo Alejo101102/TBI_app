@@ -38,7 +38,7 @@ app = FastAPI(
     description=(
         "API para análisis de morfometría basada en vóxeles (VBM) "
         "en imágenes T1 de resonancia magnética. "
-        "Soporta SPM12/DARTEL, Modelo Híbrido y nnUNet."
+        "Segmentación 3D con nnU-Net."
     ),
     version="1.0.0",
     lifespan=lifespan,
