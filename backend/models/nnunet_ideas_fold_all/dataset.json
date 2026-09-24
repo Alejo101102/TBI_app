@@ -4,13 +4,12 @@
     },
     "labels": {
         "background": 0,
-        "resection_zone": 1
+        "lesion": 1
     },
-    "numTraining": 778,
+    "numTraining": 230,
     "file_ending": ".nii.gz",
-    "name": "Dataset500_IDEAS_Epilepsy",
-    "description": "T1-weighted MRI with surgical resection masks for epileptogenic zone segmentation. 432 drug-refractory focal epilepsy patients (IDEAS) + 346 healthy controls (100 IDEAS + 246 NIMH) with empty masks.",
-    "reference": "Taylor et al. (2025). IDEAS. Epilepsia, 66(2), 471-481.",
-    "licence": "CC-BY 4.0",
-    "converted_by": "Kevin V\u00e9lez \u2014 Universidad del Valle"
+    "licence": "CC-BY 4.0 (example)",
+    "converted_by": "Castano Jenifer",
+    "name": "Dataset015_TCEC",
+    "description": "T1-weighted MRI with lesion segmentation (TCEC dataset) with SRI24"
 }

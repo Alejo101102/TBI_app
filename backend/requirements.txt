@@ -4,26 +4,15 @@ uvicorn[standard]==0.32.1
 python-multipart==0.0.12
 
 # ─── NIfTI / neuroimaging ─────────────────────────────────────────────────────
-nibabel==5.3.2
-nilearn==0.10.4        # required by cnn_model.py (resample_img)
+# nibabel pinned <4 — required by intensity-normalization==2.2.4 (see below).
+nibabel==3.2.2
 numpy==1.26.4
 
-# ─── ML / classifiers ─────────────────────────────────────────────────────────
-# PyTorch CPU base — if a NVIDIA GPU is available at runtime,
-# torch.cuda.is_available() returns True automatically (deepmriprep receives
-# no_gpu=not is_available()).
+# ─── PyTorch (nnU-Net backend) ─────────────────────────────────────────────────
+# CPU base — if a NVIDIA GPU is available at runtime, torch.cuda.is_available()
+# returns True automatically and nnUNetPredictor uses it.
 torch==2.3.1+cpu
-torchvision==0.18.1+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
-
-scikit-learn==1.5.2
-joblib==1.4.2
-
-# ─── VBM preprocessing (replacement for SPM12+DARTEL) ─────────────────────────
-# deepmriprep: brain extraction + tissue segmentation + MNI registration + modulation,
-# everything built on PyTorch (cross-platform reproducible — the reason we moved from SPM12).
-deepmriprep==0.2.0
-antspyx==0.5.4         # deepmriprep dependency for resampling
 
 # ─── nnU-Net segmentation (epileptogenic-zone localization model) ─────────────
 # 3D fullres pipeline with transfer learning from the TBI model (Castaño 2025).
@@ -31,7 +20,13 @@ antspyx==0.5.4         # deepmriprep dependency for resampling
 nnunetv2==2.5.1
 SimpleITK==2.4.0       # NIfTI I/O used internally by nnU-Net
 
+# The checkpoint was trained with a custom "KdeNormalization" preprocessing
+# class (app/pipelines/nnunet_normalization.py) that wraps this package's KDE
+# tissue-mode normalizer. Pulls in scikit-learn/scikit-image/scipy/statsmodels
+# etc. as transitive deps — left unpinned so pip can resolve compatible
+# versions against nnunetv2's own requirements.
+intensity-normalization==2.2.4
+
 # ─── Utilities ────────────────────────────────────────────────────────────────
 pydantic==2.9.2
 scipy==1.13.1
-pandas==2.2.3

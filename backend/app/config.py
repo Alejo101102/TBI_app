@@ -2,10 +2,9 @@
 config.py — Central configuration for the VBM backend
 All paths, parameters and system constants are defined here.
 
-Current pipeline: deepmriprep (pure PyTorch) → CNN MedicalNet ResNet-18.
-ROBEX remains as OPTIONAL skull-stripping before deepmriprep
-(frontend toggle `use_robex` — OFF by default, since deepmriprep performs
-brain extraction internally via deepbet).
+Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
+ROBEX remains as OPTIONAL skull-stripping before inference
+(frontend toggle `use_robex` — OFF by default).
 """
 
 import os
@@ -23,28 +22,6 @@ TMP_DIR.mkdir(exist_ok=True)
 ROBEX_DIR    = Path(os.environ.get("ROBEX_DIR", "/opt/ROBEX"))
 ROBEX_SCRIPT = ROBEX_DIR / "runROBEX.sh"
 
-# ─── CNN model (trained on mwp1 maps from deepmriprep) ───────────────────────
-# The .pt is TorchScript serialized with torch.jit.SCRIPT (NOT trace).
-# Fold 3 = best individual fold (AUC 0.7968 — the highest of the 5)
-#
-# HISTORY: the first version used torch.jit.trace, which introduced a
-# systematic bias of ~0.062 in P(epi) due to bad interaction with
-# `functools.partial` in the downsample blocks. Since the clinical threshold
-# is 0.6875, the bias turned 50% of epilepsy predictions into "control"
-# (P(epi) dropped from >0.69 to ~0.63). torch.jit.script analyzes the code
-# statically and reproduces inference 1:1 with the original model
-# (Δ = 0 across 30 test subjects).
-CNN_MODEL_PATH = MODELS_DIR / "deepmriprep_cnn_fold3_script.pt"
-
-# ─── VBM parameters (used by nifti_utils.extract_volumetric_features) ────────
-# `gm_threshold`: standard threshold for the GM mask over modulated mwp1
-#                 (same value as in the training notebook).
-# `expected_shape`: MNI152 shape produced by deepmriprep, used as a QC tag.
-VBM_PARAMS = {
-    "gm_threshold":   0.1,
-    "expected_shape": (113, 137, 113),   # deepmriprep MNI152 — differs from (121,145,121) produced by SPM12
-}
-
 # ─── nnU-Net (segmentation of epileptogenic zones) ───────────────────────────
 # The model was trained on Colab with Dataset500_IDEAS_Epilepsy,
 # nnUNetTrainer_250epochs, 3d_fullres, fold='all', transfer learning from
@@ -52,11 +29,12 @@ VBM_PARAMS = {
 #   - checkpoint_best.pth   (~235 MB)
 #   - plans.json
 #   - dataset.json
-#   - dataset_fingerprint.json
+#   - dataset_fingerprint.json  (OPTIONAL — only used for planning/training,
+#     not read by initialize_from_trained_model_folder at inference time)
 # nnUNet expects a specific folder structure when calling
 # initialize_from_trained_model_folder — we build it at runtime with symlinks.
 NNUNET_MODEL_DIR    = MODELS_DIR / "nnunet_ideas_fold_all"
-NNUNET_DATASET_NAME = "Dataset500_IDEAS_Epilepsy"
+NNUNET_DATASET_NAME = "Dataset015_TCEC"
 NNUNET_TRAINER      = "nnUNetTrainer_250epochs"
 NNUNET_PLANS_NAME   = "nnUNetPlans"
 NNUNET_CONFIG       = "3d_fullres"
@@ -93,18 +71,6 @@ NNUNET_METRICS = {
 }
 
 
-CNN_CONFIG = {
-    # CNN input shape after resample (same as during training)
-    # target_affine = np.diag([1.9, 1.9, 1.9, 1]) → 96×96×96
-    "input_shape":    (96, 96, 96),
-    "target_affine":  [1.9, 1.9, 1.9],   # voxel size in mm of the resize
-    "num_classes":    2,
-
-    # Clinical threshold optimized on validation for Specificity >= 0.85
-    # From fold 3: threshold=0.6875, Spec=0.884, Sens=0.558
-    "clinical_threshold": 0.6875,
-}
-
 # ─── API ─────────────────────────────────────────────────────────────────────
 API_CONFIG = {
     "max_upload_mb":    500,
@@ -113,25 +79,26 @@ API_CONFIG = {
 }
 
 # ─── Hardware ────────────────────────────────────────────────────────────────
-# deepmriprep uses this same logic: no_gpu = not torch.cuda.is_available()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ─── Asset validation at startup ─────────────────────────────────────────────
 def validate_assets() -> dict:
     checks = {
-        "cnn_model":          CNN_MODEL_PATH.exists(),
         "robex":              ROBEX_SCRIPT.exists(),
         "nnunet_checkpoint":  (NNUNET_MODEL_DIR / NNUNET_CHECKPOINT).exists(),
         "nnunet_plans":       (NNUNET_MODEL_DIR / "plans.json").exists(),
         "nnunet_dataset":     (NNUNET_MODEL_DIR / "dataset.json").exists(),
-        "nnunet_fingerprint": (NNUNET_MODEL_DIR / "dataset_fingerprint.json").exists(),
     }
+    # Informational only — nnUNet inference does not require this file.
+    has_fingerprint = (NNUNET_MODEL_DIR / "dataset_fingerprint.json").exists()
 
     missing = [k for k, v in checks.items() if not v]
     if missing:
         print(f"[CONFIG] ADVERTENCIA — assets faltantes: {missing}")
     else:
         print(f"[CONFIG] Todos los assets verificados OK ({len(checks)} checks)")
+    if not has_fingerprint:
+        print("[CONFIG] dataset_fingerprint.json no presente (opcional, no bloquea inferencia)")
     return checks
 
 

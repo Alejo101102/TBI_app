@@ -9,7 +9,7 @@ resection masks for patients + empty masks for controls.
 Model ARCHITECTURE:
   - 3D PlainConvUNet, 6 stages, features [32, 64, 128, 256, 320, 320]
   - patch [128, 128, 128], batch 2, spacing [1.05, 1.0, 1.0]
-  - Normalization: ZScoreNormalization
+  - Normalization: KdeNormalization (custom — see nnunet_normalization.py)
   - Output: binary mask (0=background, 1=putative epileptogenic zone)
 
 Backend FLOW (ModelType.NNUNET):
@@ -39,6 +39,11 @@ from app.config import (
     NNUNET_METRICS,
 )
 from app.api.schemas import AnalysisResult, ModelType, StepStatus
+from app.pipelines.nnunet_normalization import register as _register_kde_normalization
+
+# Must run before any nnU-Net preprocessing — the checkpoint's plans.json
+# references a custom "KdeNormalization" class nnunetv2 doesn't ship.
+_register_kde_normalization()
 
 
 # ─── Predictor singleton ─────────────────────────────────────────────────────
@@ -60,6 +65,11 @@ def _setup_model_folder() -> Path:
     The user dropped the 4 flat files in NNUNET_MODEL_DIR. Here we build the
     expected structure with symlinks (or copies, if symlinks fail) inside
     /app/tmp/_nnunet_setup/.
+
+    `dataset_fingerprint.json` is REQUIRED only for planning/training —
+    `initialize_from_trained_model_folder()` only reads `dataset.json` and
+    `plans.json` for inference. If the fingerprint is missing we skip it
+    instead of failing, so inference still works without it.
     """
     setup_dir = TMP_DIR / "_nnunet_setup"
     fold_dir  = setup_dir / f"fold_{NNUNET_FOLD}"
@@ -67,18 +77,29 @@ def _setup_model_folder() -> Path:
     setup_dir.mkdir(parents=True, exist_ok=True)
     fold_dir.mkdir(parents=True, exist_ok=True)
 
-    pairs = [
+    required_pairs = [
         (NNUNET_MODEL_DIR / NNUNET_CHECKPOINT,  fold_dir / NNUNET_CHECKPOINT),
         (NNUNET_MODEL_DIR / "plans.json",       setup_dir / "plans.json"),
         (NNUNET_MODEL_DIR / "dataset.json",     setup_dir / "dataset.json"),
+    ]
+    optional_pairs = [
         (NNUNET_MODEL_DIR / "dataset_fingerprint.json",
                                                 setup_dir / "dataset_fingerprint.json"),
     ]
-    for src, dst in pairs:
+
+    for src, dst in required_pairs:
         if dst.exists() or dst.is_symlink():
             continue
         if not src.exists():
             raise FileNotFoundError(f"Archivo nnUNet no encontrado: {src}")
+        try:
+            dst.symlink_to(src)
+        except (OSError, NotImplementedError):
+            shutil.copy2(str(src), str(dst))
+
+    for src, dst in optional_pairs:
+        if dst.exists() or dst.is_symlink() or not src.exists():
+            continue
         try:
             dst.symlink_to(src)
         except (OSError, NotImplementedError):

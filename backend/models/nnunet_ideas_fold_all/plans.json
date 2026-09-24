@@ -1,25 +1,25 @@
 {
-    "dataset_name": "Dataset500_IDEAS_Epilepsy",
+    "dataset_name": "Dataset015_TCEC",
     "plans_name": "nnUNetPlans",
     "original_median_spacing_after_transp": [
-        1.0547000169754028,
+        1.0,
         1.0,
         1.0
     ],
     "original_median_shape_after_transp": [
-        180,
-        185,
-        165
+        137,
+        174,
+        137
     ],
     "image_reader_writer": "SimpleITKIO",
     "transpose_forward": [
-        1,
         0,
+        1,
         2
     ],
     "transpose_backward": [
-        1,
         0,
+        1,
         2
     ],
     "configurations": {
@@ -33,14 +33,14 @@
             ],
             "median_image_size_in_voxels": [
                 174.0,
-                156.0
+                137.0
             ],
             "spacing": [
                 1.0,
                 1.0
             ],
             "normalization_schemes": [
-                "ZScoreNormalization"
+                "KdeNormalization"
             ],
             "use_mask_for_norm": [
                 true
@@ -174,21 +174,21 @@
             "batch_size": 2,
             "patch_size": [
                 128,
-                128,
-                128
+                160,
+                112
             ],
             "median_image_size_in_voxels": [
-                177.0,
+                137.0,
                 174.0,
-                156.0
+                137.0
             ],
             "spacing": [
-                1.0547000169754028,
+                1.0,
                 1.0,
                 1.0
             ],
             "normalization_schemes": [
-                "ZScoreNormalization"
+                "KdeNormalization"
             ],
             "use_mask_for_norm": [
                 true
@@ -288,7 +288,7 @@
                         [
                             2,
                             2,
-                            2
+                            1
                         ]
                     ],
                     "n_conv_per_stage": [
@@ -333,13 +333,13 @@
     "label_manager": "LabelManager",
     "foreground_intensity_properties_per_channel": {
         "0": {
-            "max": 19552.0,
-            "mean": 1600.2722607010164,
-            "median": 1538.0,
+            "max": 5438.84765625,
+            "mean": 512.8549852038484,
+            "median": 198.45933532714844,
             "min": 0.0,
-            "percentile_00_5": 101.0,
-            "percentile_99_5": 5626.0,
-            "std": 1040.6074064767017
+            "percentile_00_5": 0.0,
+            "percentile_99_5": 3044.112548828125,
+            "std": 712.1052489644301
         }
     }
 }
