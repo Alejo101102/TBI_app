@@ -70,7 +70,7 @@ export const getAssetsStatus = async () => {
 // POST /viewer-metrics/{job_id} — client-side render timings of the anatomical
 // viewer. The render happens on this machine's CPU (canvas2d, no WebGL), so the
 // container cannot measure it; we ship the numbers over and the backend prints
-// them, which is how they end up in `docker logs vbm_backend`.
+// them, which is how they end up in `docker logs samil_backend`.
 //
 // Best-effort by design: `keepalive` lets the final flush survive a pagehide or
 // navigation, and the swallowed rejection guarantees a metrics outage can never

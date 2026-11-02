@@ -2,7 +2,7 @@ import Brain from '../components/Brain.jsx';
 import { MODELS } from '../data/models.js';
 import { useT } from '../i18n/LanguageContext.jsx';
 
-const CONTACT_EMAIL = 'kevin.alejandro.velez@correounivalle.edu.co';
+const CONTACT_EMAIL = 'alejandro.cano@correounivalle.edu.co';
 
 const HomeScreen = ({ onSelect, assets }) => {
   const t = useT();

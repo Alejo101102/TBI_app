@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# VBM App — Backend Dockerfile
+# SAMIL App — Backend Dockerfile
 # Base: Ubuntu 22.04 LTS
 # Pipeline: 3D nnU-Net (segmentación de zonas epileptogénicas)
 #

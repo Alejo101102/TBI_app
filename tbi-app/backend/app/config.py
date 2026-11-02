@@ -1,5 +1,5 @@
 """
-config.py — Central configuration for the VBM backend
+config.py — Central configuration for the SAMIL backend
 All paths, parameters and system constants are defined here.
 
 Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.

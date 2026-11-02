@@ -105,7 +105,7 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
     const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `VBM_${lang === 'en' ? 'Report' : 'Reporte'}_${info.test.replace(/\s+/g, '_')}.txt`;
+    a.download = `SAMIL_${lang === 'en' ? 'Report' : 'Reporte'}_${info.test.replace(/\s+/g, '_')}.txt`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -276,7 +276,7 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
           <button
             className="btn btn-ok"
             onClick={() =>
-              downloadMask(jobId, `VBM_mask_${info.test.replace(/\s+/g, '_')}.nii.gz`)
+              downloadMask(jobId, `SAMIL_mask_${info.test.replace(/\s+/g, '_')}.nii.gz`)
                 .catch((e) => alert(`${t('results.downloadMaskError') || 'Download error'}: ${e.message || e}`))
             }
           >

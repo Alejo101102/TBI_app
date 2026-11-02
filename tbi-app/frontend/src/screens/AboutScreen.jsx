@@ -28,7 +28,7 @@ const AboutScreen = ({ onBack }) => {
           <div>
             <div className="about-label">{t('about.teamDev')}</div>
             <div className="about-value">
-              <strong>Kevin Velez</strong>
+              <strong>Alejandro Guerrero</strong>
               <br />
               {t('footer.role')}
             </div>

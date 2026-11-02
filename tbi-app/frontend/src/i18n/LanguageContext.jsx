@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { TRANSLATIONS } from './translations.js';
 
-const STORAGE_KEY = 'vbm.lang';
+const STORAGE_KEY = 'samil.lang';
 const DEFAULT_LANG = 'es';
 
 const LanguageContext = createContext(null);

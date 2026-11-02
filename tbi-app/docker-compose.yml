@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# VBM App — Docker Compose
+# SAMIL App — Docker Compose
 #
 # Usage:
 #   docker compose up --build         # first time
@@ -19,7 +19,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vbm_backend
+    container_name: samil_backend
     ports:
       - "8000:8000"
     volumes:
@@ -53,7 +53,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: vbm_frontend
+    container_name: samil_frontend
     ports:
       - "3000:80"       # Nginx serves the React build on internal port 80
     depends_on:

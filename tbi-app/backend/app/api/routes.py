@@ -1,5 +1,5 @@
 """
-routes.py — VBM API endpoints
+routes.py — SAMIL API endpoints
 POST /analyze  → uploads T1 + metadata, creates a job, returns job_id
 GET  /status/{job_id} → polls the job status
 GET  /report/{job_id} → downloads the .txt report
@@ -256,7 +256,7 @@ def _generate_report(job_id: str, result: AnalysisResult):
 
     lines = [
         sep_eq,
-        "  VBM App — Reporte de Análisis",
+        "  SAMIL App — Reporte de Análisis",
         sep_eq,
         _row("Prueba",     result.test_name),
         _row("Paciente",   result.patient_name or "No especificado"),
@@ -484,7 +484,7 @@ def download_report(job_id: str):
         raise HTTPException(status_code=404, detail="Reporte aún no disponible")
     return FileResponse(
         path=report_path,
-        filename=f"vbm_reporte_{job_id}.txt",
+        filename=f"samil_reporte_{job_id}.txt",
         media_type="text/plain",
     )
 
@@ -549,7 +549,7 @@ def get_mask(job_id: str):
 # The viewer renders on the CLIENT's CPU (canvas2d, no WebGL), so the container
 # cannot time it — nginx only ever sees the HTTP requests. The browser measures
 # with performance.now() and POSTs here; we just print it so the numbers show up
-# in `docker logs vbm_backend` (the Dockerfile sets PYTHONUNBUFFERED=1).
+# in `docker logs samil_backend` (the Dockerfile sets PYTHONUNBUFFERED=1).
 
 def _ms(value) -> str:
     """Format milliseconds with one decimal, or '—' if the client omitted it."""

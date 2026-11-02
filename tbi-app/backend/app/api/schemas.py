@@ -103,7 +103,7 @@ JobStatusResponse.model_rebuild()
 # The 2D viewer (frontend/src/components/NiiVueViewer.jsx) renders on the
 # CLIENT's CPU with canvas2d — no WebGL, no GPU. The container never sees that
 # work, so the browser measures it with performance.now() and POSTs it here;
-# the route only prints it, so the numbers land in `docker logs vbm_backend`.
+# the route only prints it, so the numbers land in `docker logs samil_backend`.
 #
 # Every field is Optional because the two phases ("load" and "render") share
 # this one model: a load report fills the volume/load fields, a render report
