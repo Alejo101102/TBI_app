@@ -296,7 +296,7 @@ Key known limitations (test set: 57 images with 230 ground-truth lesions; a lesi
 
 For trained weights, dataset questions, or to report bugs:
 
-**Kevin Velez**
+**Alejandro Guerrero**
 Systems Engineering, Universidad del Valle
 Multimedia and Computer Vision Laboratory
-kevin.alejandro.velez@correounivalle.edu.co
+alejandro.cano@correounivalle.edu.co
