@@ -305,7 +305,7 @@ def _generate_report(job_id: str, result: AnalysisResult):
                          f"centro ({x}, {y}, {z})")
         lines += [
             sep_dash,
-            "  MÉTRICAS DEL MODELO (prueba TCEC · 57 imágenes, 230 lesiones)",
+            "  MÉTRICAS DEL MODELO (conjunto de prueba · 57 imágenes con TBI, 230 lesiones)",
             _row("DSC",                     _pct(result.model_dsc)),
             _row("IoU",                     _pct(result.model_iou)),
             _row("Detección pequeñas",      _pct(result.model_det_small)),

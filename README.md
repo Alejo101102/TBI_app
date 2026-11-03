@@ -42,7 +42,7 @@ The whole pipeline runs locally inside Docker containers; no MRI data leaves the
 
 | ID            | Type           | Backbone                                  | Reported metric          | Notes                                                                                       |
 | ------------- | -------------- | ----------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| `nnunet`      | Segmentation   | nnU-Net v2 3D fullres (PlainConvUNet, 6 stages) | DSC 61.6%, IoU 55.4%; lesion detection: small 11.8%, medium 40.8%, large 88.6%; FP proportion 67.7% | Fine-tuned from the TBI segmentation model of Castaño Ledesma with an adaptive Dice loss (ADL v2) and adaptive sampling (ADS), learning rate 10⁻³, final checkpoint (epoch 200). Evaluated on the TCEC test set (57 images, 230 lesions). |
+| `nnunet`      | Segmentation   | nnU-Net v2 3D fullres (PlainConvUNet, 6 stages) | DSC 61.6%, IoU 55.4%; lesion detection: small 11.8%, medium 40.8%, large 88.6%; FP proportion 67.7% | Fine-tuned from the TBI segmentation model of Castaño Ledesma with an adaptive Dice loss (ADL v2) and adaptive sampling (ADS), learning rate 10⁻³, final checkpoint (epoch 200). Evaluated on the test set (57 images with TBI, 230 lesions). |
 
 Size groups: small < 100 mm³, medium 100–1000 mm³, large > 1000 mm³. A lesion counts as detected when IoU ≥ 0.1; the FP proportion is the fraction of predicted lesions that match no ground-truth lesion.
 
@@ -144,7 +144,7 @@ The upload screen has a single toggle, **"Preprocess the T1 (ROBEX + registratio
 
 | Input T1 | Toggle | What happens |
 | -------- | ------ | ------------ |
-| Already skull-stripped and registered to SRI24 (e.g. the TCEC test images `TCEC_xxxx_0000.nii.gz`) | Off (default) | The T1 goes directly to nnU-Net. |
+| Already skull-stripped and registered to SRI24 (e.g. the test images `TCEC_xxxx_0000.nii.gz`) | Off (default) | The T1 goes directly to nnU-Net. |
 | Raw (skull, scalp, neck, any orientation or field of view) | On | ROBEX → ANTs SyN to SRI24 → nnU-Net. |
 
 Notes:
@@ -283,7 +283,7 @@ tbi-app/
 
 ## Limitations and clinical disclaimer
 
-This software is a **research prototype** developed for an undergraduate thesis. It must not be used for clinical decision-making. The model is a fine-tuned version of the TBI segmentation model of Castaño Ledesma, trained and evaluated on a single dataset (TCEC, T1 images skull-stripped with ROBEX and registered to SRI24), and has not been validated on independent populations, scanner manufacturers or acquisition protocols. Results must always be interpreted by a qualified neurologist or radiologist.
+This software is a **research prototype** developed for an undergraduate thesis. It must not be used for clinical decision-making. The model is a fine-tuned version of the TBI segmentation model of Castaño Ledesma, trained and evaluated on a single dataset (T1 images of patients with TBI, skull-stripped with ROBEX and registered to SRI24), and has not been validated on independent populations, scanner manufacturers or acquisition protocols. Results must always be interpreted by a qualified neurologist or radiologist.
 
 Key known limitations (test set: 57 images with 230 ground-truth lesions; a lesion counts as detected when IoU ≥ 0.1):
 
