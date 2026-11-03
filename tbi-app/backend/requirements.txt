@@ -14,7 +14,7 @@ numpy==1.26.4
 torch==2.3.1+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-# ─── nnU-Net segmentation (epileptogenic-zone localization model) ─────────────
+# ─── nnU-Net segmentation (TBI lesion model) ─────────────────────────────────
 # 3D fullres pipeline with transfer learning from the TBI model (Castaño 2025).
 # CPU inference works but is slow (~15-30 min); with NVIDIA GPU <60s.
 nnunetv2==2.5.1

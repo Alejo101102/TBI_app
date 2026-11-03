@@ -1,16 +1,14 @@
 """
-nnunet.py — 3D-nnU-Net segmentation pipeline for localizing epileptogenic
-            zones.
+nnunet.py — 3D-nnU-Net segmentation pipeline for TBI lesions.
 
-Model: 3d_fullres, nnUNetTrainer_250epochs, fold=all, transfer learning from
-Castaño's TBI checkpoint (2025). Trained on Dataset500 (IDEAS_Epilepsy) with
-resection masks for patients + empty masks for controls.
+Model: 3d_fullres, fold=all, fine-tuned from Castaño Ledesma's TBI checkpoint
+on Dataset015_TCEC with ADL v2 + ADS (LR 1e-3, checkpoint_final).
 
 Model ARCHITECTURE:
   - 3D PlainConvUNet, 6 stages, features [32, 64, 128, 256, 320, 320]
-  - patch [128, 128, 128], batch 2, spacing [1.05, 1.0, 1.0]
+  - patch [128, 160, 112], batch 2, spacing [1.0, 1.0, 1.0]
   - Normalization: KdeNormalization (custom — see nnunet_normalization.py)
-  - Output: binary mask (0=background, 1=putative epileptogenic zone)
+  - Output: binary mask (0=background, 1=lesion)
 
 Backend FLOW (ModelType.NNUNET):
   1. Loading T1 image              ← routes.py
@@ -19,8 +17,7 @@ Backend FLOW (ModelType.NNUNET):
   4. Mask analysis                 ← this module (clusters, volume)
 
 PERFORMANCE:
-  - NVIDIA GPU: <60s per subject
-  - CPU: ~15-30 min per subject (acceptable for the deployable app)
+  - CPU: a few minutes per subject (much faster with an NVIDIA GPU)
 """
 
 import time
@@ -208,10 +205,9 @@ def run(brain_path: Path, job_id: str,
     # ── Classification derived from the mask ──────────────────────────────
     # Any segmented voxel counts as "lesion detected"; an empty mask is
     # reported as "no findings". No confidence/probability is attached: the
-    # previous values were the epilepsy model's subject-level sensitivity and
-    # specificity, and the TBI evaluation has no subject-level equivalent.
-    is_epi      = mask_stats["mask_voxels"] > 0
-    prediction  = "epilepsy" if is_epi else "control"
+    # TBI evaluation is per lesion and has no subject-level equivalent.
+    has_lesion  = mask_stats["mask_voxels"] > 0
+    prediction  = "lesion" if has_lesion else "no_findings"
 
     return AnalysisResult(
         # Derived prediction

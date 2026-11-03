@@ -228,7 +228,7 @@ body { font-family:'Outfit',system-ui,sans-serif; background:var(--bg); color:va
 .threshold-info-title { font-size:13px; font-weight:700; color:var(--pd); margin-bottom:5px; }
 .threshold-info-body  { font-size:12.5px; line-height:1.55; color:var(--pd); }
 
-/* ── Vertical marker for the clinical threshold on the Epilepsy bar ── */
+/* ── Vertical marker for a threshold on a probability bar ── */
 .threshold-marker {
   position:absolute; top:-4px; bottom:-4px; width:2px;
   background:var(--text); transform:translateX(-1px); z-index:2;
@@ -508,8 +508,11 @@ body { font-family:'Outfit',system-ui,sans-serif; background:var(--bg); color:va
   justify-content: center;
 }
 .niivue-canvas {
-  max-width: 100%;
-  max-height: 100%;
+  /* Scale the cropped slice up to fill the square, keeping its aspect ratio
+     (a bare max-width only shrinks it, leaving a lot of black around). */
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   /* Bilinear smoothing: the cropped slice is scaled 4-5×; pixelated would
      look too blocky, 'auto' smoothing gives the right balance between
      sharpness and smoothness. */

@@ -6,7 +6,7 @@
 #   docker compose up                 # subsequent runs
 #   docker compose down               # tear down
 #
-# Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
+# Current pipeline: 3D nnU-Net segmentation of TBI lesions.
 #
 # Heavy assets (NOT in git — mounted from the host):
 #   backend/models/nnunet_ideas_fold_all/ → checkpoint_final.pth, plans.json,

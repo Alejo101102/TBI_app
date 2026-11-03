@@ -282,7 +282,7 @@ def _generate_report(job_id: str, result: AnalysisResult):
         lines += [
             "  RESULTADO (derivado de la segmentación)",
             _row("Predicción",
-                 "LESIÓN DETECTADA" if result.prediction == "epilepsy" else "SIN HALLAZGOS"),
+                 "LESIÓN DETECTADA" if result.prediction == "lesion" else "SIN HALLAZGOS"),
             sep_dash,
         ]
 
@@ -434,7 +434,7 @@ async def analyze(
         raise HTTPException(
             status_code=503,
             detail="Modelo nnUNet no disponible: faltan archivos del modelo en el servidor. "
-                   "Solicítelos a kevin.alejandro.velez@correounivalle.edu.co",
+                   "Solicítelos a alejandro.cano@correounivalle.edu.co",
         )
     preprocess_missing = [k for k in PREPROCESS_ASSETS if not assets.get(k)]
     if preprocess and preprocess_missing:

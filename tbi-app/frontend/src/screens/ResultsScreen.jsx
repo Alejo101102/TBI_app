@@ -37,7 +37,7 @@ const row = (label, value, width = 22) =>
 const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
   const t = useT();
   const [lang] = useLang();
-  const isEpi = result?.prediction === 'epilepsy';
+  const hasLesion = result?.prediction === 'lesion';
 
   const genTxt = () => {
     const locale = lang === 'en' ? 'en-US' : 'es-CO';
@@ -179,17 +179,17 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
         <div>
           {/* ── Verdict banner: classification derived from the mask ──── */}
           {result?.prediction && (
-              <div className={`seg-verdict ${isEpi ? 'sv-pos' : 'sv-neg'}`}>
+              <div className={`seg-verdict ${hasLesion ? 'sv-pos' : 'sv-neg'}`}>
                 <div className="seg-verdict-main">
-                  <span className="seg-verdict-icon">{isEpi ? '⚠' : '✓'}</span>
+                  <span className="seg-verdict-icon">{hasLesion ? '⚠' : '✓'}</span>
                   <div>
                     <div className="seg-verdict-title">
-                      {isEpi ? t('results.segVerdictEpi') : t('results.segVerdictControl')}
+                      {hasLesion ? t('results.segVerdictLesion') : t('results.segVerdictNone')}
                     </div>
                     <div className="seg-verdict-sub">
-                      {isEpi
-                        ? t('results.segVerdictEpiSub', { vol: result.mask_volume_cm3.toFixed(2), n: result.n_clusters })
-                        : t('results.segVerdictControlSub')}
+                      {hasLesion
+                        ? t('results.segVerdictLesionSub', { vol: result.mask_volume_cm3.toFixed(2), n: result.n_clusters })
+                        : t('results.segVerdictNoneSub')}
                     </div>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
                       {Math.round(result.confidence * 100)}%
                     </div>
                     <div className="seg-verdict-conf-lab">
-                      {isEpi ? t('results.segConfSens') : t('results.segConfSpec')}
+                      {hasLesion ? t('results.segConfSens') : t('results.segConfSpec')}
                     </div>
                   </div>
                 )}

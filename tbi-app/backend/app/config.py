@@ -2,7 +2,7 @@
 config.py — Central configuration for the TBI App backend
 All paths, parameters and system constants are defined here.
 
-Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
+Current pipeline: 3D nnU-Net segmentation of TBI lesions.
 OPTIONAL preprocessing before inference: ROBEX skull stripping + ANTs SyN
 registration to the SRI24 atlas (frontend toggle `preprocess` — OFF by default).
 """
@@ -30,10 +30,9 @@ ANTS_DIR          = Path(os.environ.get("ANTS_DIR", "/opt/ANTs/bin"))
 ANTS_SYN_SCRIPT   = ANTS_DIR / "antsRegistrationSyN.sh"
 ATLAS_PATH        = BASE_DIR / "app" / "atlas" / "SRI24_atlas.nii"
 
-# ─── nnU-Net (segmentation of epileptogenic zones) ───────────────────────────
-# The model was trained on Colab with Dataset500_IDEAS_Epilepsy,
-# nnUNetTrainer_250epochs, 3d_fullres, fold='all', transfer learning from
-# Castaño's checkpoint (TBI model). Files expected in NNUNET_MODEL_DIR:
+# ─── nnU-Net (segmentation of TBI lesions) ───────────────────────────────────
+# Fine-tuned from Castaño Ledesma's TBI checkpoint on Dataset015_TCEC
+# (3d_fullres, fold='all') with ADL v2 + ADS. Files expected in NNUNET_MODEL_DIR:
 #   - checkpoint_final.pth  (~235 MB)
 #   - plans.json
 #   - dataset.json
@@ -43,7 +42,7 @@ ATLAS_PATH        = BASE_DIR / "app" / "atlas" / "SRI24_atlas.nii"
 # initialize_from_trained_model_folder — we build it at runtime with symlinks.
 NNUNET_MODEL_DIR    = MODELS_DIR / "nnunet_ideas_fold_all"
 NNUNET_DATASET_NAME = "Dataset015_TCEC"
-NNUNET_TRAINER      = "nnUNetTrainer_250epochs"
+NNUNET_TRAINER      = "nnUNetTrainer"
 NNUNET_PLANS_NAME   = "nnUNetPlans"
 NNUNET_CONFIG       = "3d_fullres"
 NNUNET_FOLD         = "all"

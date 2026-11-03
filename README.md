@@ -274,7 +274,7 @@ tbi-app/
 - **Accepted input**: a single T1-weighted volume in NIfTI format, either already skull-stripped and registered to SRI24, or raw (with preprocessing enabled). Maximum upload size 500 MB.
 - **Processing time on CPU**: a few minutes for the segmentation, plus roughly 15–35 minutes when preprocessing is enabled. The progress bar advances within each step.
 - **Preprocessing (ROBEX + SRI24 registration)**: off by default. Enable it for raw T1s; leave it off for T1s that are already skull-stripped and registered to SRI24. See [Preprocessing](#preprocessing-robex--sri24-registration).
-- **Viewer orientation**: axial and coronal views use the radiological convention (patient's right on the left of the screen, marked with R/L labels), the same as Mango and most clinical viewers.
+- **Viewer orientation**: anterior is at the top of the axial view and superior at the top of the coronal and sagittal views. Axial and coronal views use the radiological convention (patient's right on the left of the screen, marked with R/L labels), the same as Mango and most clinical viewers. The slice is scaled to fill the viewer.
 - **Mask download**: the segmentation pipeline writes the mask to `backend/tmp/<job_id>/nnunet_out/subject.nii.gz`. The download button serves it via `/api/v1/mask/<job_id>`.
 - **Job persistence**: the backend keeps a snapshot of job states in `backend/tmp/_jobs_snapshot.json`. If the container restarts during inference, the frontend will see an `error` status with a clear message instead of a generic 404.
 - **Language**: the UI toggle (top-right) switches all text and the generated report between Spanish and English; the choice is stored in `localStorage`.

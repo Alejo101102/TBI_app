@@ -16,8 +16,10 @@ import { postViewerMetrics } from '../api/client.js';
 //
 // Axial and coronal views use the RADIOLOGICAL convention, like Mango and most
 // clinical viewers: the patient's right is drawn on the left of the screen
-// (R/L labels on the canvas edges). The X axis is mirrored only when drawing;
-// the volumes, crop and mask stay untouched.
+// (R/L labels on the canvas edges). Rows are also flipped so anterior (axial)
+// and superior (coronal/sagittal) are at the top; slice row 0 is posterior /
+// inferior in RAS. Mirroring and flipping happen only when drawing; the
+// volumes, crop and mask stay untouched.
 //
 // Performance is MEASURED, not estimated: every phase below is timed with
 // performance.now() and POSTed to /viewer-metrics/{job_id}, which prints it to
@@ -26,6 +28,7 @@ import { postViewerMetrics } from '../api/client.js';
 // the render work, so the numbers describe this exact implementation.
 
 // `mirror`: draw the X axis right→left (radiological convention).
+// Every view also draws its rows bottom→top (see renderSlice).
 const VIEWS = [
   { key: 'axial',    axis: 2, mirror: true  },   // slices on the Z axis (I-S)
   { key: 'coronal',  axis: 1, mirror: true  },   // slices on the Y axis (P-A)
@@ -211,8 +214,9 @@ function sliceBboxFor(axis, bbox3d) {
 }
 
 /**
- * Draw T1 in grayscale + red mask onto a canvas. With `mirror`, column x of
- * the canvas shows column (w-1-x) of the slice (radiological convention).
+ * Draw T1 in grayscale + red mask onto a canvas. Row y of the canvas shows row
+ * (h-1-y) of the slice, so anterior/superior end up at the top. With `mirror`,
+ * column x shows column (w-1-x) of the slice (radiological convention).
  */
 function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max, mirror) {
   const { w, h, pixels: t1 } = t1Slice;
@@ -225,7 +229,9 @@ function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max
 
   for (let p = 0; p < t1.length; p++) {
     // p = canvas pixel, i = source voxel of the slice
-    const i = mirror ? p - (p % w) + (w - 1 - (p % w)) : p;
+    const col = p % w;
+    const srcRow = h - 1 - ((p - col) / w);
+    const i = srcRow * w + (mirror ? w - 1 - col : col);
     // Normalize T1 to 0-255
     let v = (t1[i] - t1Min) / range;
     v = Math.max(0, Math.min(1, v));

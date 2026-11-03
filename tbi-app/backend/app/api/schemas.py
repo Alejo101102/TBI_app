@@ -73,10 +73,8 @@ class AnalysisResult(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     # ── Prediction derived from the segmentation mask ─────────────────────────
-    prediction:        Optional[Literal["epilepsy", "control"]] = None
+    prediction:        Optional[Literal["lesion", "no_findings"]] = None
     confidence:        Optional[float] = Field(None, ge=0.0, le=1.0)
-    prob_epilepsy:     Optional[float] = Field(None, ge=0.0, le=1.0)
-    prob_control:      Optional[float] = Field(None, ge=0.0, le=1.0)
 
     # ── SEGMENTATION output (nnUNet) ─────────────────────────────────────────
     # mask_filename: name of the .nii.gz inside tmp/<job_id>/nnunet_out/

@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # TBI App — Backend Dockerfile
 # Base: Ubuntu 22.04 LTS
-# Pipeline: 3D nnU-Net (segmentación de zonas epileptogénicas)
+# Pipeline: 3D nnU-Net (segmentación de lesiones por TCE)
 #
 # Preprocesamiento opcional (toggle del frontend `preprocess`, por defecto OFF):
 # ROBEX (skull stripping) + registro ANTs SyN al atlas SRI24, los mismos pasos

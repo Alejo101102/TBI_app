@@ -170,9 +170,9 @@ const UploadScreen = ({ model, assets, onStart, onBack }) => {
           <span style={{ flexShrink: 0 }}>⚠</span>
           <span>
             {t('upload.modelMissing', { model: t(`models.${model.id}.name`) })}{' '}
-            <a href="mailto:kevin.alejandro.velez@correounivalle.edu.co"
+            <a href="mailto:alejandro.cano@correounivalle.edu.co"
                style={{ color: 'var(--bad)', fontWeight: 700 }}>
-              kevin.alejandro.velez@correounivalle.edu.co
+              alejandro.cano@correounivalle.edu.co
             </a>
           </span>
         </div>
