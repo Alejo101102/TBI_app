@@ -26,12 +26,13 @@ Developed by **Alejandro Guerrero** (Systems Engineering, Universidad del Valle)
 
 ## What it does
 
-The user uploads a single T1-weighted brain MRI in NIfTI format (`.nii` or `.nii.gz`), runs the pre-trained nnU-Net segmentation model, and receives:
+The user uploads a single T1-weighted brain MRI in NIfTI format (`.nii` or `.nii.gz`), optionally preprocesses it (ROBEX + registration to the SRI24 atlas), runs the pre-trained nnU-Net segmentation model, and receives:
 
-- A binary verdict: **possible epilepsy** vs **control** (no findings).
-- A binary 3D mask localizing the suspected epileptogenic zone, with cluster statistics (total volume, number of connected components, size of the largest cluster).
+- A verdict: **lesion detected** vs **no findings**, depending on whether the mask is empty.
+- A binary 3D mask of the suspected traumatic lesions, with cluster statistics (total volume, number of connected components, size of the largest cluster).
 - An interactive 2D viewer (axial, coronal, sagittal) with the mask overlaid on the T1.
-- A downloadable plain-text report and the mask as a `.nii.gz` file ready to load in FSL, MRIcroGL, ITK-SNAP, etc.
+- A downloadable plain-text report with the list of lesions (volume, size group, axial slices, centroid), a summary by size, notices that depend on the result, and the model metrics.
+- The mask as a `.nii.gz` file ready to load in Mango, FSL, ITK-SNAP, etc.
 
 The whole pipeline runs locally inside Docker containers; no MRI data leaves the host.
 
@@ -41,7 +42,9 @@ The whole pipeline runs locally inside Docker containers; no MRI data leaves the
 
 | ID            | Type           | Backbone                                  | Reported metric          | Notes                                                                                       |
 | ------------- | -------------- | ----------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| `nnunet`      | Segmentation   | nnU-Net v2 3D fullres (PlainConvUNet, 6 stages) | DSC median 82.5%, HD95 9.4 mm, Sens 90.5%, Spec 78.9% | Transfer-learning from the TBI segmentation model of Castaño (2025). Trained on 432 epilepsy patients with resection masks plus 346 controls with empty masks. |
+| `nnunet`      | Segmentation   | nnU-Net v2 3D fullres (PlainConvUNet, 6 stages) | DSC 61.6%, IoU 55.4%; lesion detection: small 11.8%, medium 40.8%, large 88.6%; FP proportion 67.7% | Fine-tuned from the TBI segmentation model of Castaño Ledesma with an adaptive Dice loss (ADL v2) and adaptive sampling (ADS), learning rate 10⁻³, final checkpoint (epoch 200). Evaluated on the TCEC test set (57 images, 230 lesions). |
+
+Size groups: small < 100 mm³, medium 100–1000 mm³, large > 1000 mm³. A lesion counts as detected when IoU ≥ 0.1; the FP proportion is the fraction of predicted lesions that match no ground-truth lesion.
 
 ---
 
@@ -74,8 +77,9 @@ The whole pipeline runs locally inside Docker containers; no MRI data leaves the
 
 - FastAPI + Uvicorn
 - PyTorch 2.3.1 (CPU build by default)
-- nibabel, nilearn, NumPy, SciPy
+- nibabel, NumPy, SciPy
 - nnunetv2 2.5.1 + SimpleITK
+- intensity-normalization 2.2.4 (KDE normalization used by the checkpoint)
 - ROBEX v1.2 + ANTs 2.5.4 (`antsRegistrationSyN.sh`) with the SRI24 atlas (optional preprocessing of raw T1s, off by default)
 
 **Frontend (Node 20):**
@@ -99,12 +103,12 @@ Minimum (CPU-only, recommended for the thesis demo):
 - **Docker Desktop**: 4.20 or newer
 - **RAM allocated to Docker**: 6 GB (8 GB recommended for nnU-Net inference)
 - **Disk space**: 10 GB free (Docker images ~3 GB + trained model ~235 MB + ANTs ~2 GB + intermediate files)
-- **CPU**: any modern x86-64 (Intel/AMD); inference on CPU takes 5-7 minutes per case
+- **CPU**: any modern x86-64 (Intel/AMD); nnU-Net inference on CPU takes a few minutes per case, and the optional preprocessing adds roughly 15–35 minutes
 - **Network**: required only for the first build (pulling base images and Python/Node packages)
 
 Optional (much faster inference):
 
-- NVIDIA GPU with CUDA 12-compatible driver and `nvidia-container-toolkit`; uncomment the `deploy.resources` block in `docker-compose.yml`. Inference drops to under 60 seconds per case.
+- NVIDIA GPU with CUDA 12-compatible driver and `nvidia-container-toolkit`; uncomment the `deploy.resources` block in `docker-compose.yml`. nnU-Net detects the GPU automatically and inference becomes much faster (ROBEX and ANTs still run on CPU).
 
 ---
 
@@ -169,7 +173,7 @@ Notes:
    # copy the zip you received into backend/models/ and unzip it there
    ```
 
-3. Check the preprocessing assets if you will analyze raw T1s: the ROBEX binary in `backend/vendor/ROBEXv12.linux64.tar.gz` and the atlas in `backend/app/atlas/SRI24_atlas.nii`. ANTs is installed automatically during the build. Without them the app still works for T1s that are already skull-stripped and registered to SRI24 (see [Preprocessing](#preprocessing-robex--sri24-registration)).
+3. Check the preprocessing assets if you will analyze raw T1s: the ROBEX binary in `backend/vendor/ROBEXv12.linux64.tar.gz` and the atlas in `backend/app/atlas/SRI24_atlas.nii`. The atlas is not included in the repository (it is listed in `.gitignore`): download SRI24 separately or request it by email. ANTs is installed automatically during the build. Without them the app still works for T1s that are already skull-stripped and registered to SRI24 (see [Preprocessing](#preprocessing-robex--sri24-registration)).
 
 4. Build the images (this may take 10-15 minutes the first time, mainly downloading PyTorch and nnU-Net dependencies):
 
@@ -216,7 +220,6 @@ docker logs -f tbi_frontend
 ```
 tbi-app/
 ├── docker-compose.yml
-├── README.md
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt
@@ -268,8 +271,8 @@ tbi-app/
 
 ## Usage notes
 
-- **Accepted input**: a single skull-on (or skull-stripped) T1-weighted volume in NIfTI format. Maximum upload size 500 MB.
-- **Processing time on CPU**: segmentation ~10-20 minutes (plus ~15-35 minutes when preprocessing is enabled). The progress bar advances within each step.
+- **Accepted input**: a single T1-weighted volume in NIfTI format, either already skull-stripped and registered to SRI24, or raw (with preprocessing enabled). Maximum upload size 500 MB.
+- **Processing time on CPU**: a few minutes for the segmentation, plus roughly 15–35 minutes when preprocessing is enabled. The progress bar advances within each step.
 - **Preprocessing (ROBEX + SRI24 registration)**: off by default. Enable it for raw T1s; leave it off for T1s that are already skull-stripped and registered to SRI24. See [Preprocessing](#preprocessing-robex--sri24-registration).
 - **Viewer orientation**: axial and coronal views use the radiological convention (patient's right on the left of the screen, marked with R/L labels), the same as Mango and most clinical viewers.
 - **Mask download**: the segmentation pipeline writes the mask to `backend/tmp/<job_id>/nnunet_out/subject.nii.gz`. The download button serves it via `/api/v1/mask/<job_id>`.
