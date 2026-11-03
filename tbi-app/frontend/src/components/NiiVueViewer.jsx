@@ -21,7 +21,7 @@ import { postViewerMetrics } from '../api/client.js';
 //
 // Performance is MEASURED, not estimated: every phase below is timed with
 // performance.now() and POSTed to /viewer-metrics/{job_id}, which prints it to
-// `docker logs samil_backend`. See flushRenderMetrics() at the bottom. The
+// `docker logs tbi_backend`. See flushRenderMetrics() at the bottom. The
 // instrumentation is read-only — it does not throttle, cache or reorder any of
 // the render work, so the numbers describe this exact implementation.
 

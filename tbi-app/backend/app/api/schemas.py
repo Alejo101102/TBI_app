@@ -55,6 +55,17 @@ class JobStatusResponse(BaseModel):
     error:    Optional[str] = None
 
 
+# ─── One connected component of the predicted mask ──────────────────────────
+class LesionInfo(BaseModel):
+    """Measured in the mask's space (SRI24). Sorted by volume, largest first."""
+    volume_mm3:   float
+    category:     Literal["small", "medium", "large"]   # < 100, 100-1000, > 1000 mm³
+    slice_min:    int            # first axial slice (viewer slider index)
+    slice_max:    int            # last axial slice
+    centroid_vox: list[int]      # voxel indices (x, y, z)
+    centroid_mm:  list[float]    # world coordinates in mm
+
+
 # ─── Final result ────────────────────────────────────────────────────────────
 class AnalysisResult(BaseModel):
     # The model_* fields collide with Pydantic v2's protected namespace
@@ -77,15 +88,18 @@ class AnalysisResult(BaseModel):
     mask_volume_cm3:   Optional[float] = None
     n_clusters:        Optional[int]   = None   # connected clusters in the mask
     largest_cluster_cm3: Optional[float] = None
+    lesions:           Optional[list[LesionInfo]] = None
+    preprocessed:      Optional[bool]  = None   # ROBEX + SRI24 registration applied
 
-    # ── Segmentation model metrics (constants, evaluation on 778 subjects) ───
-    # DSC and HD95 are MEDIANS; sensitivity/specificity at subject level.
+    # ── Segmentation model metrics (constants, TCEC test set: 57 images) ─────
+    # See NNUNET_METRICS in config.py for the definitions.
     model_dsc:                Optional[float] = None
-    model_hd95:               Optional[float] = None
-    model_seg_sensitivity:    Optional[float] = None   # subject-level detection rate
-    model_seg_specificity:    Optional[float] = None   # controls without FP
-    model_seg_ppv:            Optional[float] = None   # positive predictive value
-    model_seg_npv:            Optional[float] = None   # negative predictive value
+    model_iou:                Optional[float] = None
+    model_det_small:          Optional[float] = None   # detection rate, < 100 mm³
+    model_det_medium:         Optional[float] = None   # detection rate, 100-1000 mm³
+    model_det_large:          Optional[float] = None   # detection rate, > 1000 mm³
+    model_fp_proportion:      Optional[float] = None   # FP / predicted lesions
+    model_fp_per_subject:     Optional[float] = None
 
     # ── Analysis metadata ────────────────────────────────────────────────────
     model_used:        ModelType
@@ -103,7 +117,7 @@ JobStatusResponse.model_rebuild()
 # The 2D viewer (frontend/src/components/NiiVueViewer.jsx) renders on the
 # CLIENT's CPU with canvas2d — no WebGL, no GPU. The container never sees that
 # work, so the browser measures it with performance.now() and POSTs it here;
-# the route only prints it, so the numbers land in `docker logs samil_backend`.
+# the route only prints it, so the numbers land in `docker logs tbi_backend`.
 #
 # Every field is Optional because the two phases ("load" and "render") share
 # this one model: a load report fills the volume/load fields, a render report

@@ -1,5 +1,5 @@
 """
-config.py — Central configuration for the SAMIL backend
+config.py — Central configuration for the TBI App backend
 All paths, parameters and system constants are defined here.
 
 Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
@@ -49,34 +49,24 @@ NNUNET_CONFIG       = "3d_fullres"
 NNUNET_FOLD         = "all"
 NNUNET_CHECKPOINT   = "checkpoint_final.pth"
 
-# Reported metrics — evaluation over 778 subjects (432 patients + 346
-# controls) from the IDEAS_Epilepsy dataset.
-#
-# DSC and HD95: MEDIAN values are used, not the mean. The distribution is
-# bimodal — the model either segments well (DSC > 0.8) or fails completely
-# (DSC ≈ 0) when the lesion is absent in the T1. The median reflects typical
-# behavior.
-#   DSC mean:    0.6320 ± 0.3325  (dragged down by outliers like sub-18 = 0.0001)
-#   DSC median:  0.8248           ← reported
-#   HD95 mean:   38.96 ± 40.21 mm
-#   HD95 median: 9.37 mm          ← reported
-#
-# Sensitivity / Specificity: at the SUBJECT level (detection rate and rate
-# of controls without false positives), which is what is clinically useful.
-# Voxel-wise sensitivity (0.699) and voxel-wise precision (0.618) are kept
-# as reference.
+# Reported metrics — fine-tuned TBI model (ADL v2 + ADS, LR 1e-3,
+# checkpoint_final) evaluated on the TCEC test set: 57 images with 230
+# ground-truth lesions. A lesion counts as detected when IoU >= 0.1; a false
+# positive is a predicted component that matches no ground-truth lesion.
+# Size groups: small < 100 mm³, medium 100-1000 mm³, large > 1000 mm³.
 NNUNET_METRICS = {
-    "dsc_mean":           0.8248,  # median over 432 patients
-    "hausdorff_95":       9.37,    # mm — median
-    "sensitivity":        0.9051,  # subject-level detection rate (391/432)
-    "specificity":        0.7890,  # controls without FP (273/346)
-    "voxel_sensitivity":  0.6990,
-    "voxel_precision":    0.6175,
-    "cluster_f1":         0.4135,
-    "ppv":                0.8427,
-    "npv":                0.8694,
-    "fp_per_control":     0.79,
+    "dsc_mean":        0.616,
+    "iou_mean":        0.554,
+    "det_small":       14 / 119,   # 14 of 119 small lesions detected
+    "det_medium":      31 / 76,    # 31 of 76 medium lesions detected
+    "det_large":       31 / 35,    # 31 of 35 large lesions detected
+    "fp_proportion":   0.677,      # false positives / predicted lesions
+    "fp_per_subject":  2.614,
 }
+
+# Size groups for the per-lesion list (same thresholds as the evaluation).
+LESION_SMALL_MM3 = 100
+LESION_LARGE_MM3 = 1000
 
 
 # ─── API ─────────────────────────────────────────────────────────────────────

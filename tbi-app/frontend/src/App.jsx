@@ -59,7 +59,7 @@ const App = () => {
         >
           <Brain size={32} color="var(--primary)" />
           <span className="nav-title">
-            SAMIL <em>App</em>
+            TBI <em>App</em>
           </span>
           <span className="nav-version">{t('nav.versionBadge')}</span>
         </div>

@@ -1,5 +1,5 @@
 """
-routes.py — SAMIL API endpoints
+routes.py — TBI App API endpoints
 POST /analyze  → uploads T1 + metadata, creates a job, returns job_id
 GET  /status/{job_id} → polls the job status
 GET  /report/{job_id} → downloads the .txt report
@@ -210,6 +210,7 @@ async def _run_analysis(job_id: str, nii_path: Path, model: ModelType,
         result.test_name         = metadata.get("test_name", "")
         result.patient_name      = metadata.get("patient_name")
         result.notes             = metadata.get("notes")
+        result.preprocessed      = preprocess
 
         JOBS[job_id]["result"]   = result
         JOBS[job_id]["status"]   = "completed"
@@ -271,39 +272,47 @@ def _generate_report(job_id: str, result: AnalysisResult):
         _row("Paciente",   result.patient_name or "No especificado"),
         _row("Modelo",     result.model_used.value),
         _row("Tiempo",     _fmt_time(result.processing_time_s)),
+        _row("Preprocesamiento",
+             "Sí (ROBEX + registro SRI24)" if result.preprocessed else "No (imagen ya en SRI24)"),
         sep_dash,
     ]
 
-    # ── CLASSIFICATION block (prediction derived from the mask) ────────────
+    # ── Verdict derived from the mask ─────────────────────────────────────
     if result.prediction is not None:
         lines += [
-            "  RESULTADO (clasificación derivada de la segmentación)",
+            "  RESULTADO (derivado de la segmentación)",
             _row("Predicción",
-                 "POSIBLE EPILEPSIA" if result.prediction == "epilepsy" else "CONTROL"),
-            _row("Confianza",        _pct(result.confidence)),
-            _row("P(Epilepsia)",     _pct(result.prob_epilepsy)),
-            _row("P(Control)",       _pct(result.prob_control)),
+                 "LESIÓN DETECTADA" if result.prediction == "epilepsy" else "SIN HALLAZGOS"),
             sep_dash,
         ]
 
     # ── SEGMENTATION block (only if there is a mask) ──────────────────────
     if result.mask_filename is not None:
-        hd95 = (f"{result.model_hd95:.2f} mm"
-                if result.model_hd95 is not None else "—")
+        fp_subj = (f"{result.model_fp_per_subject:.2f}"
+                   if result.model_fp_per_subject is not None else "—")
         lines += [
             "  RESULTADO (segmentación nnU-Net 3D fullres)",
             _row("Vóxeles máscara",     f"{result.mask_voxels:,}" if result.mask_voxels is not None else "—"),
             _row("Volumen total",       f"{result.mask_volume_cm3:.2f} cm³"),
             _row("Clusters conexos",    str(result.n_clusters)),
             _row("Cluster más grande",  f"{result.largest_cluster_cm3:.2f} cm³"),
+        ]
+        cat_es = {"small": "pequeña", "medium": "mediana", "large": "grande"}
+        for i, les in enumerate(result.lesions or [], start=1):
+            x, y, z = les.centroid_vox
+            lines.append(f"  #{i}  {les.volume_mm3:.1f} mm³ · {cat_es[les.category]} · "
+                         f"cortes axiales {les.slice_min}–{les.slice_max} · "
+                         f"centro ({x}, {y}, {z})")
+        lines += [
             sep_dash,
-            "  MÉTRICAS DEL MODELO (evaluación · 778 sujetos IDEAS)",
-            _row("DSC (mediana)",         _pct(result.model_dsc)),
-            _row("Hausdorff 95% (med.)",  hd95),
-            _row("Sensibilidad (sujeto)", _pct(result.model_seg_sensitivity)),
-            _row("Especificidad (sujeto)",_pct(result.model_seg_specificity)),
-            _row("VPP",                   _pct(result.model_seg_ppv)),
-            _row("VPN",                   _pct(result.model_seg_npv)),
+            "  MÉTRICAS DEL MODELO (prueba TCEC · 57 imágenes, 230 lesiones)",
+            _row("DSC",                     _pct(result.model_dsc)),
+            _row("IoU",                     _pct(result.model_iou)),
+            _row("Detección pequeñas",      _pct(result.model_det_small)),
+            _row("Detección medianas",      _pct(result.model_det_medium)),
+            _row("Detección grandes",       _pct(result.model_det_large)),
+            _row("Proporción de FP",        _pct(result.model_fp_proportion)),
+            _row("FP por sujeto",           fp_subj),
         ]
 
     if result.notes:
@@ -497,7 +506,7 @@ def download_report(job_id: str):
         raise HTTPException(status_code=404, detail="Reporte aún no disponible")
     return FileResponse(
         path=report_path,
-        filename=f"samil_reporte_{job_id}.txt",
+        filename=f"tbi_reporte_{job_id}.txt",
         media_type="text/plain",
     )
 
@@ -562,7 +571,7 @@ def get_mask(job_id: str):
 # The viewer renders on the CLIENT's CPU (canvas2d, no WebGL), so the container
 # cannot time it — nginx only ever sees the HTTP requests. The browser measures
 # with performance.now() and POSTs here; we just print it so the numbers show up
-# in `docker logs samil_backend` (the Dockerfile sets PYTHONUNBUFFERED=1).
+# in `docker logs tbi_backend` (the Dockerfile sets PYTHONUNBUFFERED=1).
 
 def _ms(value) -> str:
     """Format milliseconds with one decimal, or '—' if the client omitted it."""

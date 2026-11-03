@@ -9,15 +9,15 @@ export const MODELS = [
   {
     id: 'nnunet',
     metricLabel: 'dscMean',
-    metricVal: '82.5%',
+    metricVal: '61.6%',
     badge: 'segmentation',
     type: 'segmentation',
     steps: ['load', 'robex', 'nnunetPre', 'nnunetInfer', 'nnunetPost'],
     metrics: [
-      ['dscMean',     '82.5 %'],
-      ['hausdorff95', '9.4 mm'],
-      ['sensitivity', '90.5 %'],
-      ['specificity', '78.9 %'],
+      ['dscMean',      '61.6 %'],
+      ['iou',          '55.4 %'],
+      ['detSmall',     '11.8 %'],
+      ['fpProportion', '67.7 %'],
     ],
   },
 ];

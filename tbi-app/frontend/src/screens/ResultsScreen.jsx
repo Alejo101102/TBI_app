@@ -13,6 +13,22 @@ const fmtTime = (seconds) => {
   return m ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
 };
 
+// Model metrics sent by the backend (constants from the TCEC test set):
+// [translation key under metrics.*, field in the result].
+const MODEL_METRICS = [
+  ['dscMean',      'model_dsc'],
+  ['iou',          'model_iou'],
+  ['detSmall',     'model_det_small'],
+  ['detMedium',    'model_det_medium'],
+  ['detLarge',     'model_det_large'],
+  ['fpProportion', 'model_fp_proportion'],
+  ['fpPerSubject', 'model_fp_per_subject'],
+];
+
+// FP per subject is a count; every other metric is a fraction shown as %.
+const fmtMetric = (field, value) =>
+  field === 'model_fp_per_subject' ? value.toFixed(2) : `${(value * 100).toFixed(1)} %`;
+
 // Padded "Label : value" row for the exported plain-text report.
 // Keeps all colons in the same column for a clean look.
 const row = (label, value, width = 22) =>
@@ -43,6 +59,10 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
       result?.processing_time_s != null
         ? row(t('results.processingTime'), fmtTime(result.processing_time_s))
         : null,
+      result?.preprocessed != null
+        ? row(t('report.preprocessing'), result.preprocessed ? t('report.preprocYes') : t('report.preprocNo'))
+        : null,
+      row(t('report.space'), t('report.spaceVal')),
       '',
     ];
 
@@ -62,26 +82,48 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
     );
     resultBlock.push('');
 
+    // ── Lesion list + size summary (one entry per cluster of the mask) ────
+    const lesions = result?.lesions || [];
+    const count   = (cat) => lesions.filter((l) => l.category === cat).length;
+    const nSmall  = count('small');
+    const lesionBlock = [];
+    if (result?.lesions != null) {
+      lesionBlock.push(
+        t('report.sectionLesions'),
+        row(t('report.sizeSummary'),
+          t('report.sizeSummaryVal', { s: nSmall, m: count('medium'), l: count('large') })),
+      );
+      lesions.forEach((l, i) => {
+        const [x, y, z] = l.centroid_vox;
+        lesionBlock.push(`  ${t('report.lesionLine', {
+          n: i + 1, vol: l.volume_mm3.toFixed(1), cat: t(`report.cat.${l.category}`),
+          a: l.slice_min, b: l.slice_max, x, y, z,
+        })}`);
+      });
+      if (lesions.length) lesionBlock.push(`  ${t('report.lesionsNote')}`);
+      lesionBlock.push('');
+    }
+
+    // ── Notices that depend on this subject's mask ───────────────────────
+    const pct = (v) => (v != null ? `${(v * 100).toFixed(1)} %` : '—');
+    const notices = [];
+    if (result?.lesions != null) {
+      if (lesions.length === 0)
+        notices.push(t('report.noticeEmpty', { det: pct(result.model_det_small) }));
+      if (nSmall > 0)
+        notices.push(t('report.noticeSmall', { n: nSmall, det: pct(result.model_det_small) }));
+      if (nSmall >= 2)
+        notices.push(t('report.noticeFp', { n: nSmall, fp: pct(result.model_fp_proportion) }));
+    }
+    const noticeBlock = notices.length
+      ? [t('report.sectionNotices'), ...notices.map((n) => `  ${n}`), '']
+      : [];
+
     // ── Metrics block ────────────────────────────────────────────────────
     const metricsBlock = [t('report.sectionMetrics')];
-    if (result?.model_dsc != null)
-      metricsBlock.push(row(t('metrics.dscMean'),
-        `${(result.model_dsc * 100).toFixed(1)} %`));
-    if (result?.model_hd95 != null)
-      metricsBlock.push(row(t('metrics.hausdorff95'),
-        `${result.model_hd95.toFixed(2)} mm`));
-    if (result?.model_seg_sensitivity != null)
-      metricsBlock.push(row(t('metrics.sensitivity'),
-        `${(result.model_seg_sensitivity * 100).toFixed(1)} %`));
-    if (result?.model_seg_specificity != null)
-      metricsBlock.push(row(t('metrics.specificity'),
-        `${(result.model_seg_specificity * 100).toFixed(1)} %`));
-    if (result?.model_seg_ppv != null)
-      metricsBlock.push(row(t('metrics.ppv'),
-        `${(result.model_seg_ppv * 100).toFixed(1)} %`));
-    if (result?.model_seg_npv != null)
-      metricsBlock.push(row(t('metrics.npv'),
-        `${(result.model_seg_npv * 100).toFixed(1)} %`));
+    for (const [key, field] of MODEL_METRICS) {
+      if (result?.[field] != null) metricsBlock.push(row(t(`metrics.${key}`), fmtMetric(field, result[field])));
+    }
     metricsBlock.push('');
 
     // ── Footer with disclaimer ───────────────────────────────────────────
@@ -98,14 +140,14 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
       '',
     ];
 
-    const lines = [...header, ...resultBlock, ...metricsBlock, ...footer]
+    const lines = [...header, ...resultBlock, ...lesionBlock, ...noticeBlock, ...metricsBlock, ...footer]
       .filter((l) => l !== null && l !== undefined)
       .join('\n');
 
     const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `SAMIL_${lang === 'en' ? 'Report' : 'Reporte'}_${info.test.replace(/\s+/g, '_')}.txt`;
+    a.download = `TBI_${lang === 'en' ? 'Report' : 'Reporte'}_${info.test.replace(/\s+/g, '_')}.txt`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -151,14 +193,16 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
                     </div>
                   </div>
                 </div>
-                <div className="seg-verdict-conf">
-                  <div className="seg-verdict-conf-val">
-                    {Math.round((result.confidence || 0) * 100)}%
+                {result.confidence != null && (
+                  <div className="seg-verdict-conf">
+                    <div className="seg-verdict-conf-val">
+                      {Math.round(result.confidence * 100)}%
+                    </div>
+                    <div className="seg-verdict-conf-lab">
+                      {isEpi ? t('results.segConfSens') : t('results.segConfSpec')}
+                    </div>
                   </div>
-                  <div className="seg-verdict-conf-lab">
-                    {isEpi ? t('results.segConfSens') : t('results.segConfSpec')}
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -197,49 +241,19 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
                   )}
                 </div>
 
-                {/* Model metrics (evaluation on 778 subjects) */}
+                {/* Model metrics (TCEC test set: 57 images, 230 lesions) */}
                 {result?.model_dsc != null && (
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: 'var(--t2)' }}>
                       {t('results.modelMetricsTitle')}
                     </div>
                     <div className="mtiles" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-                      <div className="mtile">
-                        <div className="mv">{(result.model_dsc * 100).toFixed(1)}%</div>
-                        <div className="ml">{t('metrics.dscMean')}</div>
-                      </div>
-                      {result.model_hd95 != null && (
-                        <div className="mtile">
-                          <div className="mv">{result.model_hd95.toFixed(1)}</div>
-                          <div className="ml">{t('metrics.hausdorff95')} (mm)</div>
+                      {MODEL_METRICS.filter(([, field]) => result[field] != null).map(([key, field]) => (
+                        <div className="mtile" key={field}>
+                          <div className="mv">{fmtMetric(field, result[field]).replace(' %', '%')}</div>
+                          <div className="ml">{t(`metrics.${key}`)}</div>
                         </div>
-                      )}
-                      {result.model_seg_sensitivity != null && (
-                        <div className="mtile">
-                          <div className="mv">{(result.model_seg_sensitivity * 100).toFixed(1)}%</div>
-                          <div className="ml">{t('metrics.sensitivity')}</div>
-                        </div>
-                      )}
-                      {result.model_seg_specificity != null && (
-                        <div className="mtile">
-                          <div className="mv">{(result.model_seg_specificity * 100).toFixed(1)}%</div>
-                          <div className="ml">{t('metrics.specificity')}</div>
-                        </div>
-                      )}
-                      {result.model_seg_ppv != null && (
-                        <div className="mtile tw">
-                          <div className="mv">{(result.model_seg_ppv * 100).toFixed(1)}%</div>
-                          <div className="ml">{t('metrics.ppv')}</div>
-                          <div className="tt">{t('metrics.ppvTooltip')}</div>
-                        </div>
-                      )}
-                      {result.model_seg_npv != null && (
-                        <div className="mtile tw">
-                          <div className="mv">{(result.model_seg_npv * 100).toFixed(1)}%</div>
-                          <div className="ml">{t('metrics.npv')}</div>
-                          <div className="tt">{t('metrics.npvTooltip')}</div>
-                        </div>
-                      )}
+                      ))}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 8, lineHeight: 1.5 }}>
                       {t('results.modelMetricsFootnote')}
@@ -276,7 +290,7 @@ const ResultsScreen = ({ model, info, file, jobId, result, onReset }) => {
           <button
             className="btn btn-ok"
             onClick={() =>
-              downloadMask(jobId, `SAMIL_mask_${info.test.replace(/\s+/g, '_')}.nii.gz`)
+              downloadMask(jobId, `TBI_mask_${info.test.replace(/\s+/g, '_')}.nii.gz`)
                 .catch((e) => alert(`${t('results.downloadMaskError') || 'Download error'}: ${e.message || e}`))
             }
           >

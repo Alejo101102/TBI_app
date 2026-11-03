@@ -37,7 +37,7 @@ from nnunetv2.imageio.simpleitk_reader_writer import SimpleITKIO
 from app.config import (
     TMP_DIR, DEVICE,
     NNUNET_MODEL_DIR, NNUNET_FOLD, NNUNET_CHECKPOINT,
-    NNUNET_METRICS,
+    NNUNET_METRICS, LESION_SMALL_MM3, LESION_LARGE_MM3,
 )
 from app.api.schemas import AnalysisResult, ModelType, StepStatus
 from app.pipelines.nnunet_normalization import register as _register_kde_normalization
@@ -206,28 +206,16 @@ def run(brain_path: Path, job_id: str,
         _copy_as_nii_gz(brain_path, t1_dst)
 
     # ── Classification derived from the mask ──────────────────────────────
-    # Training notebook rule: any segmented voxel counts as
-    # "epilepsy detected" (detection rate 0.9051). An empty mask classifies
-    # as "control" (specificity 0.7890). We do NOT apply a minimum-volume
-    # threshold — that would degrade the reported sensitivity.
+    # Any segmented voxel counts as "lesion detected"; an empty mask is
+    # reported as "no findings". No confidence/probability is attached: the
+    # previous values were the epilepsy model's subject-level sensitivity and
+    # specificity, and the TBI evaluation has no subject-level equivalent.
     is_epi      = mask_stats["mask_voxels"] > 0
     prediction  = "epilepsy" if is_epi else "control"
-
-    # "Confidence" = subject-level sensitivity/specificity of the model for
-    # the predicted class. It is not a true Bayesian probability (nnUNet
-    # does not produce one); it is the most honest metric we can attach
-    # without making one up.
-    confidence  = (NNUNET_METRICS["sensitivity"] if is_epi
-                   else NNUNET_METRICS["specificity"])
-    prob_epi    = NNUNET_METRICS["sensitivity"] if is_epi else (1 - NNUNET_METRICS["specificity"])
-    prob_ctrl   = 1 - prob_epi
 
     return AnalysisResult(
         # Derived prediction
         prediction          = prediction,
-        confidence          = confidence,
-        prob_epilepsy       = prob_epi,
-        prob_control        = prob_ctrl,
         # Segmentation
         mask_filename       = mask_path.name,
         t1_filename         = t1_dst_name,
@@ -235,12 +223,14 @@ def run(brain_path: Path, job_id: str,
         mask_volume_cm3     = mask_stats["mask_volume_cm3"],
         n_clusters          = mask_stats["n_clusters"],
         largest_cluster_cm3 = mask_stats["largest_cluster_cm3"],
+        lesions             = mask_stats["lesions"],
         model_dsc               = NNUNET_METRICS.get("dsc_mean"),
-        model_hd95              = NNUNET_METRICS.get("hausdorff_95"),
-        model_seg_sensitivity   = NNUNET_METRICS.get("sensitivity"),
-        model_seg_specificity   = NNUNET_METRICS.get("specificity"),
-        model_seg_ppv           = NNUNET_METRICS.get("ppv"),
-        model_seg_npv           = NNUNET_METRICS.get("npv"),
+        model_iou               = NNUNET_METRICS.get("iou_mean"),
+        model_det_small         = NNUNET_METRICS.get("det_small"),
+        model_det_medium        = NNUNET_METRICS.get("det_medium"),
+        model_det_large         = NNUNET_METRICS.get("det_large"),
+        model_fp_proportion     = NNUNET_METRICS.get("fp_proportion"),
+        model_fp_per_subject    = NNUNET_METRICS.get("fp_per_subject"),
         model_used              = ModelType.NNUNET,
         test_name           = metadata.get("test_name", ""),
         patient_name        = metadata.get("patient_name"),
@@ -314,9 +304,22 @@ def _run_nnunet_inference(t1_path: Path, job_dir: Path) -> Path:
     return expected_output
 
 
+def _size_category(volume_mm3: float) -> str:
+    """Size groups used in the evaluation: < 100, 100-1000, > 1000 mm³."""
+    if volume_mm3 < LESION_SMALL_MM3:
+        return "small"
+    if volume_mm3 < LESION_LARGE_MM3:
+        return "medium"
+    return "large"
+
+
 def _analyze_mask(mask_path: Path) -> dict:
     """
-    Post-segmentation analysis: voxel count, volume, connected clusters.
+    Post-segmentation analysis: voxel count, volume, connected clusters and
+    one entry per cluster (volume, size group, axial slices, centroid).
+
+    Everything is measured in the space of the mask (SRI24), the same space
+    used in the evaluation. Axial slice indices match the viewer slider.
     """
     img  = nib.load(str(mask_path))
     data = np.asarray(img.dataobj, dtype=np.uint8)
@@ -331,23 +334,43 @@ def _analyze_mask(mask_path: Path) -> dict:
 
     n_clusters          = 0
     largest_cluster_cm3 = 0.0
+    lesions             = []
     if n_vox > 0:
         try:
-            from scipy.ndimage import label
+            from scipy.ndimage import label, find_objects, center_of_mass
+            from nibabel.affines import apply_affine
             structure = np.ones((3, 3, 3), dtype=np.uint8)  # 26-connectivity
             labeled, n_clusters = label(mask, structure=structure)
             if n_clusters > 0:
                 sizes = np.bincount(labeled.ravel())[1:]  # ignore background
                 largest_cluster_cm3 = round(float(sizes.max() * vox_vol / 1000.0), 4)
+
+                boxes     = find_objects(labeled)
+                centroids = center_of_mass(mask, labeled, range(1, n_clusters + 1))
+                for idx in range(n_clusters):
+                    volume_mm3 = float(sizes[idx] * vox_vol)
+                    c_vox      = [int(round(c)) for c in centroids[idx]]
+                    c_mm       = apply_affine(img.affine, centroids[idx])
+                    lesions.append({
+                        "volume_mm3":   round(volume_mm3, 1),
+                        "category":     _size_category(volume_mm3),
+                        "slice_min":    int(boxes[idx][2].start),
+                        "slice_max":    int(boxes[idx][2].stop - 1),
+                        "centroid_vox": c_vox,
+                        "centroid_mm":  [round(float(v), 1) for v in c_mm],
+                    })
+                lesions.sort(key=lambda l: l["volume_mm3"], reverse=True)
         except Exception as e:
             print(f"[nnUNet] Análisis de clusters falló (no crítico): {e}")
             n_clusters = -1
+            lesions    = []
 
     return {
         "mask_voxels":         n_vox,
         "mask_volume_cm3":     round(vol_cm3, 4),
         "n_clusters":          int(n_clusters),
         "largest_cluster_cm3": largest_cluster_cm3,
+        "lesions":             lesions,
     }
 
 

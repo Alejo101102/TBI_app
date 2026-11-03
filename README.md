@@ -112,7 +112,7 @@ Optional (much faster inference):
 
 The trained model weights are not included in this repository because of their size (around 235 MB) and licensing context. To request them, please send an email to the author:
 
-**kevin.alejandro.velez@correounivalle.edu.co**
+**alejandro.cano@correounivalle.edu.co**
 
 You will receive a zip with the following files, to be placed under `backend/models/`:
 
@@ -164,8 +164,8 @@ Notes:
 2. Clone the repository and place the trained models you received via email:
 
    ```bash
-   git clone <repo-url>
-   cd vbm-app
+   git clone https://github.com/Alejo101102/TBI_app.git
+   cd TBI_app/tbi-app
    # copy the zip you received into backend/models/ and unzip it there
    ```
 
@@ -205,8 +205,8 @@ docker compose up -d --build frontend    # frontend changes
 View live logs:
 
 ```bash
-docker logs -f vbm_backend
-docker logs -f vbm_frontend
+docker logs -f tbi_backend
+docker logs -f tbi_frontend
 ```
 
 ---
@@ -214,7 +214,7 @@ docker logs -f vbm_frontend
 ## Project structure
 
 ```
-vbm-app/
+tbi-app/
 ├── docker-compose.yml
 ├── README.md
 ├── backend/
@@ -294,7 +294,7 @@ Key known limitations (test set: 57 images with 230 ground-truth lesions; a lesi
 
 ## Contact
 
-For trained weights, dataset questions, or to report bugs:
+For trained weights, atlas, dataset questions, or to report bugs:
 
 **Alejandro Guerrero**
 Systems Engineering, Universidad del Valle
