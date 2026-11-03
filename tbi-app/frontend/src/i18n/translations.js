@@ -45,9 +45,10 @@ export const TRANSLATIONS = {
     'upload.start': 'Iniciar análisis →',
     'upload.uploading': 'Subiendo imagen al servidor…',
     'upload.uploadError': 'Error al subir la imagen: {msg}',
-    'upload.robexLabel': 'Aplicar skull stripping (ROBEX) antes del análisis',
-    'upload.robexHint': 'Actívalo si tu T1 incluye cráneo, cuero cabelludo, ojos u otras estructuras no cerebrales que quieras eliminar antes del análisis. ROBEX hará una extracción morfológica del cerebro y solo el tejido cerebral pasará al modelo. Déjalo desactivado si tu T1 ya viene sin cráneo.',
-    'upload.robexMissing': 'El binario de ROBEX no está instalado en el servidor. Descárgalo desde NITRC y colócalo en backend/vendor/:',
+    'upload.preprocessLabel': 'Preprocesar la T1 (ROBEX + registro al atlas SRI24) antes del análisis',
+    'upload.preprocessHint': 'Actívalo si tu T1 es cruda: incluye cráneo, cuero cabelludo, cuello u ojos, o no está alineada al atlas. Primero ROBEX extrae el cerebro y luego ANTs (SyN) lo registra al atlas SRI24, los mismos pasos que tuvieron las imágenes de entrenamiento; el resultado se muestra sobre la T1 registrada. Añade unos 15–35 min en CPU. Déjalo desactivado si tu T1 ya viene sin cráneo y registrada al SRI24.',
+    'upload.preprocessMissing': 'El preprocesamiento no está disponible en el servidor, faltan: {missing}.',
+    'upload.robexDownload': 'Descarga ROBEX desde NITRC y colócalo en backend/vendor/:',
     'upload.modelMissing': 'El modelo {model} no está disponible: los pesos no están en el servidor. Solicítelos a',
 
     'processing.cancel': 'Cancelar',
@@ -84,7 +85,7 @@ export const TRANSLATIONS = {
     'results.newAnalysis': '+ Nuevo análisis',
     'results.processingTime': 'Tiempo de procesamiento',
 
-    'report.header': 'REPORTE SAMIL App — Análisis Neurológico',
+    'report.header': 'REPORTE TBI App — Análisis Neurológico',
     'report.date': 'Fecha:',
     'report.model': 'Modelo:',
     'report.test': 'Prueba:',
@@ -107,7 +108,7 @@ export const TRANSLATIONS = {
     'report.warn1': 'Este resultado es orientativo y NO constituye diagnóstico.',
     'report.warn2': 'Debe ser revisado por un neurólogo antes de tomar decisiones.',
     'report.notes': 'Notas:',
-    'report.footerLine': 'SAMIL App v1.0 — Morfometría Basada en Vóxeles',
+    'report.footerLine': 'TBI App v1.0 — Morfometría Basada en Vóxeles',
 
     'badge.segmentation': 'Segmentación',
 
@@ -148,8 +149,8 @@ export const TRANSLATIONS = {
 
     'steps.load.name': 'Cargando imagen T1',
     'steps.load.det': 'Verificando formato .nii / .gz',
-    'steps.robex.name': 'Extracción de cráneo · ROBEX',
-    'steps.robex.det': 'Skull stripping morfológico',
+    'steps.robex.name': 'Preprocesamiento · ROBEX + SRI24',
+    'steps.robex.det': 'Extracción de cráneo y registro al atlas SRI24 (opcional)',
     'steps.nnunetPre.name': 'Preprocesamiento nnUNet',
     'steps.nnunetPre.det': 'Normalización e interpolación',
     'steps.nnunetInfer.name': 'Inferencia de segmentación',
@@ -164,7 +165,7 @@ export const TRANSLATIONS = {
 
     'about.title': 'Acerca de la herramienta',
     'about.toolSection': 'La herramienta',
-    'about.toolBody': 'SAMIL App es una herramienta de apoyo diagnóstico para la identificación de traumatismos en imágenes T1 de resonancia magnética. Implementa un modelo de segmentación 3D (nnU-Net) que localiza zonas afectadas por traumatismos. Esta aplicación está basada en VBM App, desarrollada por Kevin Velez.',
+    'about.toolBody': 'TBI App es una herramienta de apoyo diagnóstico para la identificación de traumatismos en imágenes T1 de resonancia magnética. Implementa un modelo de segmentación 3D (nnU-Net) que localiza zonas afectadas por traumatismos. Esta aplicación está basada en VBM App, desarrollada por Kevin Velez.',
     'about.teamSection': 'Equipo',
     'about.teamDev': 'Desarrollador',
     'about.teamDirector': 'Directora',
@@ -176,7 +177,7 @@ export const TRANSLATIONS = {
     'about.teamInstitution': 'Institución',
     'about.teamInstitutionName': 'Universidad del Valle · Cali, Colombia',
     'about.techSection': 'Tecnologías',
-    'about.techBackend': 'Backend: nnU-Net v2 · ROBEX v1.2 (opcional) · Python 3.11 · FastAPI · PyTorch 2.3 (CPU/CUDA auto) · nibabel',
+    'about.techBackend': 'Backend: nnU-Net v2 · ROBEX v1.2 + ANTs 2.5 · atlas SRI24 (opcional) ·Python 3.11 · FastAPI · PyTorch 2.3 (CPU/CUDA auto) · nibabel',
     'about.techFrontend': 'Frontend: React 18 · Vite · Nginx',
     'about.disclaimerSection': 'Aviso médico',
     'about.disclaimerBody': 'Esta herramienta es de apoyo diagnóstico únicamente. Los resultados son orientativos, no constituyen diagnóstico clínico y deben ser interpretados por un médico especialista (neurólogo). No se deben tomar decisiones clínicas basándose exclusivamente en los resultados de esta aplicación.',
@@ -229,9 +230,10 @@ export const TRANSLATIONS = {
     'upload.start': 'Start analysis →',
     'upload.uploading': 'Uploading image to server…',
     'upload.uploadError': 'Image upload failed: {msg}',
-    'upload.robexLabel': 'Apply skull stripping (ROBEX) before analysis',
-    'upload.robexHint': 'Enable this if your T1 still contains the skull, scalp, eyes or other non-brain structures you want removed before the analysis. ROBEX will perform a morphological brain extraction and only the brain tissue will pass to the model. Leave it off if your T1 is already skull-stripped.',
-    'upload.robexMissing': 'ROBEX binary is not installed on the server. Download it from NITRC and place it in backend/vendor/:',
+    'upload.preprocessLabel': 'Preprocess the T1 (ROBEX + registration to the SRI24 atlas) before analysis',
+    'upload.preprocessHint': 'Enable this if your T1 is raw: it contains the skull, scalp, neck or eyes, or is not aligned to the atlas. ROBEX first extracts the brain and then ANTs (SyN) registers it to the SRI24 atlas, the same steps the training images went through; the result is shown over the registered T1. Adds about 15–35 min on CPU. Leave it off if your T1 is already skull-stripped and registered to SRI24.',
+    'upload.preprocessMissing': 'Preprocessing is not available on the server, missing: {missing}.',
+    'upload.robexDownload': 'Download ROBEX from NITRC and place it in backend/vendor/:',
     'upload.modelMissing': 'Model {model} is not available: weights not on the server. Request them at',
 
     'processing.cancel': 'Cancel',
@@ -268,7 +270,7 @@ export const TRANSLATIONS = {
     'results.newAnalysis': '+ New analysis',
     'results.processingTime': 'Processing time',
 
-    'report.header': 'SAMIL App REPORT — Neurological Analysis',
+    'report.header': 'TBI App REPORT — Neurological Analysis',
     'report.date': 'Date:',
     'report.model': 'Model:',
     'report.test': 'Test:',
@@ -291,7 +293,7 @@ export const TRANSLATIONS = {
     'report.warn1': 'This result is orientative and does NOT constitute a diagnosis.',
     'report.warn2': 'Must be reviewed by a neurologist before making decisions.',
     'report.notes': 'Notes:',
-    'report.footerLine': 'SAMIL App v1.0 — Voxel-Based Morphometry',
+    'report.footerLine': 'TBI App v1.0 — Voxel-Based Morphometry',
 
     'badge.segmentation': 'Segmentation',
 
@@ -332,8 +334,8 @@ export const TRANSLATIONS = {
 
     'steps.load.name': 'Loading T1 image',
     'steps.load.det': 'Verifying .nii / .gz format',
-    'steps.robex.name': 'Skull stripping · ROBEX',
-    'steps.robex.det': 'Morphological skull stripping',
+    'steps.robex.name': 'Preprocessing · ROBEX + SRI24',
+    'steps.robex.det': 'Skull stripping and registration to the SRI24 atlas (optional)',
     'steps.nnunetPre.name': 'nnUNet preprocessing',
     'steps.nnunetPre.det': 'Normalization and interpolation',
     'steps.nnunetInfer.name': 'Segmentation inference',
@@ -348,7 +350,7 @@ export const TRANSLATIONS = {
 
     'about.title': 'About the tool',
     'about.toolSection': 'The tool',
-    'about.toolBody': 'SAMIL App is a diagnostic support tool for identifying trauma-related injuries on T1 MRI images. It implements a 3D segmentation model (nnU-Net) that localizes areas affected by trauma. This application is based on VBM App, developed by Kevin Velez.',
+    'about.toolBody': 'TBI App is a diagnostic support tool for identifying trauma-related injuries on T1 MRI images. It implements a 3D segmentation model (nnU-Net) that localizes areas affected by trauma. This application is based on VBM App, developed by Kevin Velez.',
     'about.teamSection': 'Team',
     'about.teamDev': 'Developer',
     'about.teamDirector': 'Director',
@@ -360,7 +362,7 @@ export const TRANSLATIONS = {
     'about.teamInstitution': 'Institution',
     'about.teamInstitutionName': 'Universidad del Valle · Cali, Colombia',
     'about.techSection': 'Technologies',
-    'about.techBackend': 'Backend: nnU-Net v2 · ROBEX v1.2 (optional) · Python 3.11 · FastAPI · PyTorch 2.3 (CPU/CUDA auto) · nibabel',
+    'about.techBackend': 'Backend: nnU-Net v2 · ROBEX v1.2 + ANTs 2.5 · SRI24 atlas (optional) ·Python 3.11 · FastAPI · PyTorch 2.3 (CPU/CUDA auto) · nibabel',
     'about.techFrontend': 'Frontend: React 18 · Vite · Nginx',
     'about.disclaimerSection': 'Medical notice',
     'about.disclaimerBody': 'This tool is for diagnostic support only. Results are orientative, do not constitute a clinical diagnosis, and must be interpreted by a medical specialist (neurologist). Clinical decisions must not be made based solely on the results of this application.',

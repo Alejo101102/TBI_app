@@ -14,7 +14,7 @@ Model ARCHITECTURE:
 
 Backend FLOW (ModelType.NNUNET):
   1. Loading T1 image              ← routes.py
-  2. (Optional) ROBEX skull strip  ← routes.py (use_robex toggle)
+  2. (Optional) ROBEX + SRI24 reg. ← routes.py (preprocess toggle)
   3. nnUNet segmentation           ← this module (3D inference)
   4. Mask analysis                 ← this module (clusters, volume)
 
@@ -32,6 +32,7 @@ from typing import Callable
 import numpy as np
 import nibabel as nib
 import torch
+from nnunetv2.imageio.simpleitk_reader_writer import SimpleITKIO
 
 from app.config import (
     TMP_DIR, DEVICE,
@@ -57,7 +58,7 @@ def _setup_model_folder() -> Path:
     initialize_from_trained_model_folder():
 
         <model_training_output_dir>/
-          fold_all/checkpoint_best.pth
+          fold_all/checkpoint_final.pth
           dataset.json
           plans.json
           dataset_fingerprint.json
@@ -126,13 +127,12 @@ def get_predictor():
     t0 = time.time()
 
     use_gpu = torch.cuda.is_available()
-    # Configuration for CPU inference with low RAM (~2-4 GB in Docker):
-    #  - tile_step_size=0.7  → fewer overlapping patches (was 0.5)
-    #  - use_mirroring=False → disables flip-based TTA (4× less memory)
-    # Expected loss in DSC: ~1-2 pts. Acceptable for an interactive app
-    # in exchange for not dying from OOM.
+    # Configuration for CPU inference:
+    #  - tile_step_size=0.5  → nnU-Net default, same as the nnUNetv2_predict
+    #                          run used for the reported metrics
+    #  - use_mirroring=False → disables flip-based TTA (8× slower on CPU)
     predictor = nnUNetPredictor(
-        tile_step_size=0.7,
+        tile_step_size=0.5,
         use_gaussian=True,
         use_mirroring=False,
         perform_everything_on_device=use_gpu,
@@ -161,7 +161,8 @@ def run(brain_path: Path, job_id: str,
     Full nnUNet pipeline.
 
     Args:
-        brain_path:  T1 (raw or post-ROBEX depending on the use_robex toggle).
+        brain_path:  T1 in SRI24 space (as uploaded, or after ROBEX + registration
+                     depending on the preprocess toggle).
         job_id:      Job ID.
         update_step: callback(job_id, step_num, StepStatus, msg=None)
         metadata:    dict with test_name, patient_name, notes.
@@ -282,14 +283,15 @@ def _run_nnunet_inference(t1_path: Path, job_dir: Path) -> Path:
     #
     # predict_single_npy_array is the in-process API: I hand it a np.ndarray
     # and it returns a np.ndarray. I handle I/O myself. ZERO multiprocessing.
-    img      = nib.load(str(case_input))
-    data     = np.asarray(img.dataobj, dtype=np.float32)
-    affine   = img.affine
-    # nnUNet expects shape (C, X, Y, Z) — add the channel dim
-    input_4d = data[None, :, :, :]
-    # `spacing`: voxel size in mm (X, Y, Z) — derived from the affine
-    voxel_sz = tuple(float(s) for s in np.sqrt((affine[:3, :3] ** 2).sum(axis=0)))
-    image_props = {"spacing": voxel_sz}
+    #
+    # I/O goes through SimpleITKIO, the reader named in plans.json
+    # ("image_reader_writer"). nibabel returns arrays as (X, Y, Z) while
+    # SimpleITK returns (Z, Y, X); feeding nibabel arrays makes the network
+    # see the volume with swapped axes relative to training.
+    rw = SimpleITKIO()
+    # input_4d: (C, Z, Y, X); image_props: spacing + sitk_stuff (origin,
+    # direction) needed to write the mask back in the same space
+    input_4d, image_props = rw.read_images([str(case_input)])
 
     seg = predictor.predict_single_npy_array(
         input_image       = input_4d,
@@ -298,10 +300,8 @@ def _run_nnunet_inference(t1_path: Path, job_dir: Path) -> Path:
         output_file_truncated       = None,   # returns the array, does not write
         save_or_return_probabilities= False,
     )
-    # seg is a np.ndarray (X, Y, Z) with the binary mask
-    seg_img = nib.Nifti1Image(seg.astype(np.uint8), affine, header=img.header)
-    seg_img.set_data_dtype(np.uint8)
-    nib.save(seg_img, str(expected_output))
+    # seg is a np.ndarray (Z, Y, X) with the binary mask
+    rw.write_seg(seg.astype(np.uint8), str(expected_output), image_props)
 
     elapsed = time.time() - t0
     print(f"[nnUNet] Inferencia completada en {elapsed:.1f}s "

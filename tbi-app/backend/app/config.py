@@ -3,8 +3,8 @@ config.py — Central configuration for the SAMIL backend
 All paths, parameters and system constants are defined here.
 
 Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
-ROBEX remains as OPTIONAL skull-stripping before inference
-(frontend toggle `use_robex` — OFF by default).
+OPTIONAL preprocessing before inference: ROBEX skull stripping + ANTs SyN
+registration to the SRI24 atlas (frontend toggle `preprocess` — OFF by default).
 """
 
 import os
@@ -22,11 +22,19 @@ TMP_DIR.mkdir(exist_ok=True)
 ROBEX_DIR    = Path(os.environ.get("ROBEX_DIR", "/opt/ROBEX"))
 ROBEX_SCRIPT = ROBEX_DIR / "runROBEX.sh"
 
+# ─── Registration to the SRI24 atlas (ANTs SyN) ──────────────────────────────
+# The TBI model was trained on T1s that went through ROBEX + nonlinear
+# registration to SRI24 (antsRegistrationSyN.sh, default parameters). Raw T1s
+# must go through the same two steps before inference.
+ANTS_DIR          = Path(os.environ.get("ANTS_DIR", "/opt/ANTs/bin"))
+ANTS_SYN_SCRIPT   = ANTS_DIR / "antsRegistrationSyN.sh"
+ATLAS_PATH        = BASE_DIR / "app" / "atlas" / "SRI24_atlas.nii"
+
 # ─── nnU-Net (segmentation of epileptogenic zones) ───────────────────────────
 # The model was trained on Colab with Dataset500_IDEAS_Epilepsy,
 # nnUNetTrainer_250epochs, 3d_fullres, fold='all', transfer learning from
 # Castaño's checkpoint (TBI model). Files expected in NNUNET_MODEL_DIR:
-#   - checkpoint_best.pth   (~235 MB)
+#   - checkpoint_final.pth  (~235 MB)
 #   - plans.json
 #   - dataset.json
 #   - dataset_fingerprint.json  (OPTIONAL — only used for planning/training,
@@ -39,7 +47,7 @@ NNUNET_TRAINER      = "nnUNetTrainer_250epochs"
 NNUNET_PLANS_NAME   = "nnUNetPlans"
 NNUNET_CONFIG       = "3d_fullres"
 NNUNET_FOLD         = "all"
-NNUNET_CHECKPOINT   = "checkpoint_best.pth"
+NNUNET_CHECKPOINT   = "checkpoint_final.pth"
 
 # Reported metrics — evaluation over 778 subjects (432 patients + 346
 # controls) from the IDEAS_Epilepsy dataset.
@@ -85,6 +93,8 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 def validate_assets() -> dict:
     checks = {
         "robex":              ROBEX_SCRIPT.exists(),
+        "ants":               ANTS_SYN_SCRIPT.exists(),
+        "atlas":              ATLAS_PATH.exists(),
         "nnunet_checkpoint":  (NNUNET_MODEL_DIR / NNUNET_CHECKPOINT).exists(),
         "nnunet_plans":       (NNUNET_MODEL_DIR / "plans.json").exists(),
         "nnunet_dataset":     (NNUNET_MODEL_DIR / "dataset.json").exists(),

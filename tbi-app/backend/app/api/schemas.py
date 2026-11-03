@@ -18,10 +18,10 @@ class AnalysisMetadata(BaseModel):
     patient_name: Optional[str] = Field(None, description="Nombre del paciente")
     notes:        Optional[str] = Field(None, description="Notas clínicas")
     model:        ModelType     = Field(..., description="Pipeline a ejecutar")
-    use_robex:    bool          = Field(False, description=(
-        "Aplicar ROBEX skull stripping antes de la inferencia. Por defecto "
-        "False. Activar solo si la T1 viene con cráneo y se prefiere una "
-        "extracción morfológica explícita antes de nnUNet."
+    preprocess:   bool          = Field(False, description=(
+        "Aplicar ROBEX + registro ANTs SyN al atlas SRI24 antes de la "
+        "inferencia. Por defecto False. Activar si la T1 es cruda (con "
+        "cráneo o sin registrar al SRI24)."
     ))
 
 

@@ -29,7 +29,7 @@ export const postAnalyze = async (file, info, frontendModelId) => {
   form.append('model', apiModelId(frontendModelId));
   if (info.patient) form.append('patient_name', info.patient);
   if (info.notes) form.append('notes', info.notes);
-  form.append('use_robex', info.useRobex ? 'true' : 'false');
+  form.append('preprocess', info.preprocess ? 'true' : 'false');
 
   const response = await fetch(`${API_BASE}/analyze`, {
     method: 'POST',
@@ -59,8 +59,8 @@ export const getMaskURL = (jobId) => `${API_BASE}/mask/${jobId}`;
 
 // GET /assets — reports which weights and optional tools are present on
 // disk. The frontend calls this at startup to disable model cards or the
-// ROBEX toggle when an asset is missing.
-//   { nnunet: {ready, missing}, robex: {ready} }
+// preprocessing toggle (ROBEX + SRI24 registration) when an asset is missing.
+//   { nnunet: {ready, missing}, preprocess: {ready, missing} }
 export const getAssetsStatus = async () => {
   const response = await fetch(`${API_BASE}/assets`);
   if (!response.ok) throw new Error(await parseError(response));

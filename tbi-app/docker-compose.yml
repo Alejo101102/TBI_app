@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# SAMIL App — Docker Compose
+# TBI App — Docker Compose
 #
 # Usage:
 #   docker compose up --build         # first time
@@ -9,7 +9,7 @@
 # Current pipeline: 3D nnU-Net segmentation of epileptogenic zones.
 #
 # Heavy assets (NOT in git — mounted from the host):
-#   backend/models/nnunet_ideas_fold_all/ → checkpoint_best.pth, plans.json,
+#   backend/models/nnunet_ideas_fold_all/ → checkpoint_final.pth, plans.json,
 #                                            dataset.json (~235 MB total)
 # ─────────────────────────────────────────────────────────────────────────────
 

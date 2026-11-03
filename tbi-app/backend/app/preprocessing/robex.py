@@ -1,15 +1,18 @@
 """
-robex.py — Skull stripping with ROBEX (OPTIONAL step)
+robex.py — Skull stripping with ROBEX (first half of the preprocessing step)
 
 DESIGN DECISION:
-  The nnU-Net training pipeline (Dataset500_IDEAS_Epilepsy) passed the raw T1
-  directly to nnU-Net without prior skull stripping. Applying ROBEX at
-  inference time would feed the model an image that differs from what it
-  was trained on.
+  The TBI model was trained on T1s preprocessed in two stages: ROBEX skull
+  stripping, then ANTs SyN registration to the SRI24 atlas
+  (app/preprocessing/registration.py). Raw T1s (skull, scalp, neck, any
+  orientation) must go through both before nnU-Net.
 
-  THEREFORE: skull_strip() returns the raw T1 by default (skip_robex=True).
-  The frontend `use_robex` toggle lets the user opt into ROBEX explicitly
-  when their T1 needs it for other reasons (e.g. visual inspection).
+  The frontend `preprocess` toggle runs ROBEX + registration together. It is
+  OFF by default for T1s that are already skull-stripped and registered to
+  SRI24 (e.g. the TCEC test set): those go straight to nnU-Net.
+
+  When preprocessing is requested, a ROBEX failure raises instead of falling
+  back to the raw T1 — a T1 with skull would not match training.
 """
 
 import time
@@ -23,8 +26,8 @@ def skull_strip(t1_path: Path, job_id: str,
     """
     Skull-stripping step of the pipeline.
 
-    By default skip_robex=True: returns the original T1 unmodified.
-    This exactly replicates the nnU-Net training pipeline (raw T1 direct).
+    By default skip_robex=True: returns the original T1 unmodified (input
+    already preprocessed).
 
     Args:
         t1_path:    Path to the input .nii (already decompressed).
@@ -32,13 +35,15 @@ def skull_strip(t1_path: Path, job_id: str,
         skip_robex: If True (default), returns t1_path unmodified.
 
     Returns:
-        Path to the image that will enter nnU-Net (raw or stripped).
+        Path to the skull-stripped T1 (or the input T1 if skipped).
+
+    Raises:
+        RuntimeError: if ROBEX is requested but missing or fails.
     """
     t1_path = Path(t1_path)
 
     if skip_robex:
-        print(f"[ROBEX] Paso omitido — T1 pasa directamente a nnUNet "
-              f"(replica pipeline de entrenamiento)")
+        print(f"[ROBEX] Paso omitido — T1 ya preprocesada pasa directamente a nnUNet")
         return t1_path
 
     # ── Active skull stripping (only if skip_robex=False) ─────────────────────
@@ -53,8 +58,7 @@ def skull_strip(t1_path: Path, job_id: str,
         return stripped_path
 
     if not ROBEX_SCRIPT.exists():
-        print(f"[ROBEX] Binario no encontrado en {ROBEX_SCRIPT} — usando T1 cruda")
-        return t1_path
+        raise RuntimeError(f"ROBEX no encontrado en {ROBEX_SCRIPT}")
 
     cmd = [
         str(ROBEX_SCRIPT),
@@ -66,23 +70,18 @@ def skull_strip(t1_path: Path, job_id: str,
     print(f"[ROBEX] Ejecutando skull stripping: {t1_path.name}")
     t_start = time.time()
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,
-            cwd=str(ROBEX_DIR),
-        )
-        elapsed = round(time.time() - t_start, 1)
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=600,
+        cwd=str(ROBEX_DIR),
+    )
+    elapsed = round(time.time() - t_start, 1)
 
-        if result.returncode != 0 or not stripped_path.exists():
-            print(f"[ROBEX] Falló (código {result.returncode}) — usando T1 cruda")
-            return t1_path
+    if result.returncode != 0 or not stripped_path.exists():
+        tail = (result.stderr or result.stdout or "")[-1500:]
+        raise RuntimeError(f"ROBEX falló (código {result.returncode}): {tail}")
 
-        print(f"[ROBEX] Completado en {elapsed}s")
-        return stripped_path
-
-    except Exception as e:
-        print(f"[ROBEX] Error: {e} — usando T1 cruda")
-        return t1_path
+    print(f"[ROBEX] Completado en {elapsed}s")
+    return stripped_path

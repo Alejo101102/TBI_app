@@ -22,9 +22,9 @@ from app.config import TMP_DIR, API_CONFIG, validate_assets
 # KEEP_TMP_FILES=true → does not delete /app/tmp/<job_id>/ on completion,
 #                        so we can inspect mwp1*.nii and .m batches.
 #
-# Note: SKIP_ROBEX was removed — ROBEX is always skipped by default (design
-# decision documented in app/preprocessing/robex.py) to match the training
-# pipeline.
+# Note: SKIP_ROBEX was removed — preprocessing (ROBEX + SRI24 registration)
+# is controlled per job by the frontend `preprocess` toggle (design decision
+# documented in app/preprocessing/robex.py).
 def _truthy(env_value: str) -> bool:
     return (env_value or "").lower() in ("1", "true", "yes", "on")
 
@@ -36,6 +36,9 @@ from app.api.schemas import (
 )
 
 router = APIRouter()
+
+# Assets required by the optional preprocessing (ROBEX + SRI24 registration).
+PREPROCESS_ASSETS = ("robex", "ants", "atlas")
 
 # ─── Job store (memory + lightweight persistence on disk) ────────────────────
 # Structure: { job_id: { "status": ..., "steps": [...], "result": ... } }
@@ -102,7 +105,7 @@ def _steps_for_model(model: ModelType) -> list[ProcessStep]:
     """Return the list of steps for the selected model."""
     return [
         ProcessStep(step=1, name="Cargando imagen T1",       status=StepStatus.PENDING),
-        ProcessStep(step=2, name="Extracción de cráneo · ROBEX", status=StepStatus.PENDING),
+        ProcessStep(step=2, name="Preprocesamiento · ROBEX + registro SRI24", status=StepStatus.PENDING),
         ProcessStep(step=3, name="Segmentación nnUNet",       status=StepStatus.PENDING),
         ProcessStep(step=4, name="Análisis de máscara",       status=StepStatus.PENDING),
     ]
@@ -173,19 +176,25 @@ async def _run_analysis(job_id: str, nii_path: Path, model: ModelType,
         t1_path = validate_and_load(nii_path)
         _update_step(job_id, 1, StepStatus.COMPLETED)
 
-        # ── Step 2: Optional skull stripping (controlled by use_robex) ─────
-        # Default (use_robex=False): the T1 is passed directly to nnUNet.
-        # If use_robex=True: ROBEX is applied beforehand (useful when the
-        # user already has a T1 with skull and prefers an explicit classic
-        # skull-stripping).
-        use_robex = bool(metadata.get("use_robex", False))
-        _update_step(job_id, 2, StepStatus.IN_PROGRESS,
-                     "Aplicando ROBEX..." if use_robex else "Validando imagen T1...")
-        from app.preprocessing.robex import skull_strip
-        brain_path = skull_strip(t1_path, job_id, skip_robex=not use_robex)
-        _update_step(job_id, 2, StepStatus.COMPLETED,
-                     "Skull stripping ROBEX aplicado" if use_robex
-                     else "T1 pasa directamente a nnUNet")
+        # ── Step 2: Optional preprocessing (controlled by `preprocess`) ────
+        # Default (preprocess=False): the T1 is already skull-stripped and
+        # registered to SRI24, so it goes directly to nnUNet.
+        # If preprocess=True: raw T1 → ROBEX → ANTs SyN to SRI24, the same
+        # two steps the training images went through.
+        preprocess = bool(metadata.get("preprocess", False))
+        if preprocess:
+            from app.preprocessing.robex import skull_strip
+            from app.preprocessing.registration import register_to_atlas
+            _update_step(job_id, 2, StepStatus.IN_PROGRESS, "Aplicando ROBEX...")
+            stripped_path = await asyncio.to_thread(skull_strip, t1_path, job_id, False)
+            _update_substep(job_id, 2, 0.3, "Registrando a SRI24 (ANTs SyN)...")
+            brain_path = await asyncio.to_thread(register_to_atlas, stripped_path, job_id)
+            _update_step(job_id, 2, StepStatus.COMPLETED,
+                         "ROBEX + registro SRI24 aplicados")
+        else:
+            brain_path = t1_path
+            _update_step(job_id, 2, StepStatus.COMPLETED,
+                         "T1 ya preprocesada pasa directamente a nnUNet")
 
         # ── Following steps depend on the selected model ───────────────────
         if model == ModelType.NNUNET:
@@ -256,7 +265,7 @@ def _generate_report(job_id: str, result: AnalysisResult):
 
     lines = [
         sep_eq,
-        "  SAMIL App — Reporte de Análisis",
+        "  TBI App — Reporte de Análisis",
         sep_eq,
         _row("Prueba",     result.test_name),
         _row("Paciente",   result.patient_name or "No especificado"),
@@ -364,23 +373,25 @@ def _cleanup(job_id: str):
 def get_assets_status():
     """
     Report which model weights and optional tools are available on disk.
-    The frontend uses this to disable model cards or the ROBEX toggle and
-    to show a clear message ("contact the author to receive the weights").
+    The frontend uses this to disable model cards or the preprocessing toggle
+    and to show a clear message ("contact the author to receive the weights").
 
     Returns a flat dict per model with a boolean and the list of missing
-    files. nnUNet has 3 required files. ROBEX is the optional skull-stripping
-    binary.
+    files. nnUNet has 3 required files. Preprocessing needs the ROBEX binary,
+    ANTs and the SRI24 atlas.
     """
     checks = validate_assets()
     nnunet_files = ["nnunet_checkpoint", "nnunet_plans", "nnunet_dataset"]
     nnunet_missing = [k for k in nnunet_files if not checks.get(k)]
+    preprocess_missing = [k for k in PREPROCESS_ASSETS if not checks.get(k)]
     return {
         "nnunet": {
             "ready": len(nnunet_missing) == 0,
             "missing": nnunet_missing,
         },
-        "robex": {
-            "ready": bool(checks.get("robex", False)),
+        "preprocess": {
+            "ready": len(preprocess_missing) == 0,
+            "missing": preprocess_missing,
         },
     }
 
@@ -393,7 +404,7 @@ async def analyze(
     model:        ModelType  = Form(...),
     patient_name: str        = Form(""),
     notes:        str        = Form(""),
-    use_robex:    bool       = Form(False),
+    preprocess:   bool       = Form(False),
 ):
     # Validate extension
     filename = file.filename or ""
@@ -416,11 +427,13 @@ async def analyze(
             detail="Modelo nnUNet no disponible: faltan archivos del modelo en el servidor. "
                    "Solicítelos a kevin.alejandro.velez@correounivalle.edu.co",
         )
-    if use_robex and not assets.get("robex"):
+    preprocess_missing = [k for k in PREPROCESS_ASSETS if not assets.get(k)]
+    if preprocess and preprocess_missing:
         raise HTTPException(
             status_code=503,
-            detail="ROBEX no está instalado en el servidor. Desactive la opción o "
-                   "instale el binario en backend/vendor/ y reconstruya la imagen.",
+            detail=f"Preprocesamiento no disponible, faltan: {', '.join(preprocess_missing)}. "
+                   "Desactive la opción o instale ROBEX (backend/vendor/), ANTs y el atlas "
+                   "SRI24 (backend/app/atlas/) y reconstruya la imagen.",
         )
 
     # Validate size
@@ -452,7 +465,7 @@ async def analyze(
         "test_name":    test_name,
         "patient_name": patient_name or None,
         "notes":        notes or None,
-        "use_robex":    use_robex,
+        "preprocess":   preprocess,
     }
 
     background_tasks.add_task(_run_analysis, job_id, nii_path, model, metadata)

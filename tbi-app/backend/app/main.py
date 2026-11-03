@@ -16,7 +16,7 @@ from app.api.routes import router
 async def lifespan(app: FastAPI):
     # ── Startup ──────────────────────────────────────────────────────────────
     print("=" * 50)
-    print("  SAMIL App — Backend iniciando")
+    print("  TBI App — Backend iniciando")
     print(f"  Dispositivo: {DEVICE.upper()}")
     print("=" * 50)
 
@@ -29,12 +29,12 @@ async def lifespan(app: FastAPI):
     yield  # server runs here
 
     # ── Shutdown ─────────────────────────────────────────────────────────────
-    print("\n  SAMIL App — Backend cerrando")
+    print("\n  TBI App — Backend cerrando")
 
 
 # ─── FastAPI application ─────────────────────────────────────────────────────
 app = FastAPI(
-    title="SAMIL App — Backend",
+    title="TBI App — Backend",
     description=(
         "API para para la segmentación de lesiones "
         "en imágenes T1 de resonancia magnética, "

@@ -8,13 +8,14 @@ const ROBEX_URL = 'https://www.nitrc.org/projects/robex';
 
 const UploadScreen = ({ model, assets, onStart, onBack }) => {
   const t = useT();
-  const [info, setInfo] = useState({ test: '', patient: '', notes: '', useRobex: false });
+  const [info, setInfo] = useState({ test: '', patient: '', notes: '', preprocess: false });
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const u = (k, v) => setInfo((p) => ({ ...p, [k]: v }));
-  // Force-off the toggle if ROBEX is missing on the backend.
-  const robexAvailable = !assets || assets.robex?.ready !== false;
+  // Force-off the toggle if ROBEX, ANTs or the SRI24 atlas is missing on the backend.
+  const preprocessAvailable = !assets || assets.preprocess?.ready !== false;
+  const preprocessMissing = assets?.preprocess?.missing || [];
   const modelAvailable = !assets || assets[model.id]?.ready !== false;
   const ok = file && info.test.trim() && !uploading && modelAvailable;
 
@@ -80,23 +81,28 @@ const UploadScreen = ({ model, assets, onStart, onBack }) => {
             />
           </div>
 
-          {/* ROBEX skull stripping toggle */}
-          <label className={`opt-toggle${(uploading || !robexAvailable) ? ' opt-disabled' : ''}`}>
+          {/* Preprocessing toggle: ROBEX skull stripping + SRI24 registration */}
+          <label className={`opt-toggle${(uploading || !preprocessAvailable) ? ' opt-disabled' : ''}`}>
             <input
               type="checkbox"
-              checked={info.useRobex && robexAvailable}
-              onChange={(e) => u('useRobex', e.target.checked)}
-              disabled={uploading || !robexAvailable}
+              checked={info.preprocess && preprocessAvailable}
+              onChange={(e) => u('preprocess', e.target.checked)}
+              disabled={uploading || !preprocessAvailable}
             />
             <div className="opt-text">
-              <div className="opt-title">{t('upload.robexLabel')}</div>
-              <div className="opt-hint">{t('upload.robexHint')}</div>
-              {!robexAvailable && (
+              <div className="opt-title">{t('upload.preprocessLabel')}</div>
+              <div className="opt-hint">{t('upload.preprocessHint')}</div>
+              {!preprocessAvailable && (
                 <div className="opt-warn">
-                  ⚠ {t('upload.robexMissing')}{' '}
-                  <a href={ROBEX_URL} target="_blank" rel="noopener noreferrer">
-                    {ROBEX_URL}
-                  </a>
+                  ⚠ {t('upload.preprocessMissing', { missing: preprocessMissing.join(', ') })}
+                  {preprocessMissing.includes('robex') && (
+                    <>
+                      {' '}{t('upload.robexDownload')}{' '}
+                      <a href={ROBEX_URL} target="_blank" rel="noopener noreferrer">
+                        {ROBEX_URL}
+                      </a>
+                    </>
+                  )}
                 </div>
               )}
             </div>

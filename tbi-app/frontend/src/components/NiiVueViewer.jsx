@@ -14,16 +14,22 @@ import { postViewerMetrics } from '../api/client.js';
 // orientation (raw T1 without reorientation + nnUNet mask in the same space,
 // which is what the pipeline produces).
 //
+// Axial and coronal views use the RADIOLOGICAL convention, like Mango and most
+// clinical viewers: the patient's right is drawn on the left of the screen
+// (R/L labels on the canvas edges). The X axis is mirrored only when drawing;
+// the volumes, crop and mask stay untouched.
+//
 // Performance is MEASURED, not estimated: every phase below is timed with
 // performance.now() and POSTed to /viewer-metrics/{job_id}, which prints it to
 // `docker logs samil_backend`. See flushRenderMetrics() at the bottom. The
 // instrumentation is read-only — it does not throttle, cache or reorder any of
 // the render work, so the numbers describe this exact implementation.
 
+// `mirror`: draw the X axis right→left (radiological convention).
 const VIEWS = [
-  { key: 'axial',    axis: 2 },   // slices on the Z axis (I-S)
-  { key: 'coronal',  axis: 1 },   // slices on the Y axis (P-A)
-  { key: 'sagittal', axis: 0 },   // slices on the X axis (L-R)
+  { key: 'axial',    axis: 2, mirror: true  },   // slices on the Z axis (I-S)
+  { key: 'coronal',  axis: 1, mirror: true  },   // slices on the Y axis (P-A)
+  { key: 'sagittal', axis: 0, mirror: false },   // slices on the X axis (L-R)
 ];
 
 // Wait this long after the last slider tick before shipping the render stats.
@@ -204,8 +210,11 @@ function sliceBboxFor(axis, bbox3d) {
   return [[y0, y1], [z0, z1]];                    // sagittal: YZ
 }
 
-/** Draw T1 in grayscale + red mask onto a canvas. */
-function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max) {
+/**
+ * Draw T1 in grayscale + red mask onto a canvas. With `mirror`, column x of
+ * the canvas shows column (w-1-x) of the slice (radiological convention).
+ */
+function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max, mirror) {
   const { w, h, pixels: t1 } = t1Slice;
   canvas.width  = w;
   canvas.height = h;
@@ -214,7 +223,9 @@ function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max
   const imgData = ctx.createImageData(w, h);
   const range   = (t1Max - t1Min) || 1;
 
-  for (let i = 0; i < t1.length; i++) {
+  for (let p = 0; p < t1.length; p++) {
+    // p = canvas pixel, i = source voxel of the slice
+    const i = mirror ? p - (p % w) + (w - 1 - (p % w)) : p;
     // Normalize T1 to 0-255
     let v = (t1[i] - t1Min) / range;
     v = Math.max(0, Math.min(1, v));
@@ -232,7 +243,7 @@ function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max
       }
     }
 
-    const j = i * 4;
+    const j = p * 4;
     imgData.data[j]     = r;
     imgData.data[j + 1] = g;
     imgData.data[j + 2] = b;
@@ -478,7 +489,7 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
   // triggered by every slider tick, view switch, mask toggle and opacity change.
   useEffect(() => {
     if (!t1Ref.current || !canvasRef.current) return;
-    const axis = VIEWS.find((v) => v.key === viewKey).axis;
+    const { axis, mirror } = VIEWS.find((v) => v.key === viewKey);
 
     const tSlice0 = performance.now();
     let t1Slice   = sliceVolume(t1Ref.current, axis, sliceIdx);
@@ -495,7 +506,7 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
     const tCrop1 = performance.now();
 
     const [lo, hi]  = rangeRef.current;
-    renderSlice(canvasRef.current, t1Slice, maskSlice, showOverlay, opacity, lo, hi);
+    renderSlice(canvasRef.current, t1Slice, maskSlice, showOverlay, opacity, lo, hi, mirror);
     const tDraw1 = performance.now();
 
     const sample = {
@@ -604,6 +615,12 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
           </div>
         )}
         <canvas ref={canvasRef} className="niivue-canvas" />
+        {!loading && !errorMsg && VIEWS.find((v) => v.key === viewKey).mirror && (
+          <>
+            <span className="niivue-orient niivue-orient-left">R</span>
+            <span className="niivue-orient niivue-orient-right">L</span>
+          </>
+        )}
       </div>
 
       <div className="niivue-hint">{t('viewer.hint')}</div>
