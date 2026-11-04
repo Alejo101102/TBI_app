@@ -19,7 +19,14 @@ const AboutScreen = ({ onBack }) => {
 
       <div className="card about-section">
         <h2 className="about-h2">{t('about.toolSection')}</h2>
-        <p className="about-p">{t('about.toolBody')}</p>
+        <p className="about-p">
+          {t('about.toolBody')}{' '}
+          {t('about.basedOnPre')}
+          <a href="https://github.com/Kvel12/VBM_App" target="_blank" rel="noopener noreferrer" className="about-link">
+            VBM App
+          </a>
+          {t('about.basedOnPost')}
+        </p>
       </div>
 
       <div className="card about-section">

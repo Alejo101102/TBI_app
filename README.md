@@ -73,14 +73,16 @@ Size groups: small < 100 mm³, medium 100–1000 mm³, large > 1000 mm³. A lesi
 
 ## Technology stack
 
-**Backend (Python 3.11):**
+**Backend (Python 3.13):**
 
 - FastAPI + Uvicorn
-- PyTorch 2.3.1 (CPU build by default)
-- nibabel, NumPy, SciPy
-- nnunetv2 2.5.1 + SimpleITK
-- intensity-normalization 2.2.4 (KDE normalization used by the checkpoint)
+- PyTorch 2.11.0 (CPU build by default)
+- nibabel 5.4.2, NumPy 2.4.6, SciPy 1.16.3
+- nnunetv2 2.6.2 (installed with `--no-deps`) + dynamic-network-architectures 0.3.1 + SimpleITK 2.5.7
+- intensity-normalization 2.2.4 (KDE normalization used by the checkpoint; installed with `--no-deps` plus a one-line pymedio patch for NumPy 2)
 - ROBEX v1.2 + ANTs 2.5.4 (`antsRegistrationSyN.sh`) with the SRI24 atlas (optional preprocessing of raw T1s, off by default)
+
+The Python versions match the Google Colab environment where the model was evaluated, and the install steps for nnunetv2 and intensity-normalization follow the same evaluation notebook. The PyPI release of nnunetv2 2.6.2 asks for dynamic-network-architectures 0.4, but the model was trained and evaluated with 0.3.1; the inference code is identical, so nnunetv2 is installed without its dependency pins.
 
 **Frontend (Node 20):**
 
@@ -108,7 +110,7 @@ Minimum (CPU-only, recommended for the thesis demo):
 
 Optional (much faster inference):
 
-- NVIDIA GPU with CUDA 12-compatible driver and `nvidia-container-toolkit`; uncomment the `deploy.resources` block in `docker-compose.yml`. nnU-Net detects the GPU automatically and inference becomes much faster (ROBEX and ANTs still run on CPU).
+- NVIDIA GPU with an up-to-date driver and `nvidia-container-toolkit` (included in Docker Desktop with WSL2 on Windows). Replace `torch==2.11.0+cpu` in `backend/requirements.txt` with a CUDA build (and its matching `--extra-index-url`), then uncomment the `deploy.resources` block in `docker-compose.yml`. The CPU build cannot use the GPU even if one is present. nnU-Net detects the GPU automatically and inference becomes much faster (ROBEX and ANTs still run on CPU).
 
 ---
 
@@ -274,7 +276,7 @@ tbi-app/
 - **Accepted input**: a single T1-weighted volume in NIfTI format, either already skull-stripped and registered to SRI24, or raw (with preprocessing enabled). Maximum upload size 500 MB.
 - **Processing time on CPU**: a few minutes for the segmentation, plus roughly 15–35 minutes when preprocessing is enabled. The progress bar advances within each step.
 - **Preprocessing (ROBEX + SRI24 registration)**: off by default. Enable it for raw T1s; leave it off for T1s that are already skull-stripped and registered to SRI24. See [Preprocessing](#preprocessing-robex--sri24-registration).
-- **Viewer orientation**: anterior is at the top of the axial view and superior at the top of the coronal and sagittal views. Axial and coronal views use the radiological convention (patient's right on the left of the screen, marked with R/L labels), the same as Mango and most clinical viewers. The slice is scaled to fill the viewer.
+- **Viewer orientation**: anterior is at the top of the axial view and superior at the top of the coronal and sagittal views. In axial and coronal views the patient's left is on the left of the screen, the same orientation as `np.rot90` on the RAS volume and as Mango. The slice is scaled to fill the viewer.
 - **Mask download**: the segmentation pipeline writes the mask to `backend/tmp/<job_id>/nnunet_out/subject.nii.gz`. The download button serves it via `/api/v1/mask/<job_id>`.
 - **Job persistence**: the backend keeps a snapshot of job states in `backend/tmp/_jobs_snapshot.json`. If the container restarts during inference, the frontend will see an `error` status with a clear message instead of a generic 404.
 - **Language**: the UI toggle (top-right) switches all text and the generated report between Spanish and English; the choice is stored in `localStorage`.

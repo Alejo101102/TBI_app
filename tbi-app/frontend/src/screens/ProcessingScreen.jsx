@@ -136,7 +136,11 @@ const ProcessingScreen = ({ model, info, jobId, onCancel, onDone }) => {
               <span style={{ flexShrink: 0 }}>⏱</span>
               <span
                 dangerouslySetInnerHTML={{
-                  __html: t('processing.durationWarn', { range: `<strong>${t('processing.durationRange')}</strong>` }),
+                  // ROBEX + SRI24 registration adds most of the time, so the
+                  // estimate depends on the preprocessing toggle.
+                  __html: t('processing.durationWarn', {
+                    range: `<strong>${t(info.preprocess ? 'processing.durationRangePreprocess' : 'processing.durationRange')}</strong>`,
+                  }),
                 }}
               />
             </div>

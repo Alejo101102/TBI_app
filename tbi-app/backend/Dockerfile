@@ -21,11 +21,9 @@ ENV PYTHONUNBUFFERED=1
 # ─── Dependencias del sistema ─────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Herramientas base
-    wget curl unzip ca-certificates \
+    wget curl unzip ca-certificates software-properties-common gpg-agent \
     # Para NIfTI / nibabel
     zlib1g \
-    # Python 3.11
-    python3.11 python3.11-dev python3-pip \
     # ROBEX y antsRegistrationSyN.sh usan bc
     bc \
     # Librerías requeridas por PyTorch/nnU-Net
@@ -33,9 +31,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Python por defecto → python3.11
-RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 \
- && ln -sf /usr/bin/python3.11 /usr/bin/python
+# Python 3.13 (misma versión que el Colab de evaluación) desde deadsnakes, en
+# un venv para no mezclarlo con el Python 3.10 del sistema.
+RUN add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && apt-get install -y --no-install-recommends \
+      python3.13 python3.13-dev python3.13-venv && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    python3.13 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 
 # ─── ROBEX (skull stripping opcional) ─────────────────────────────────────────
 # Binario distribuido por NITRC detrás de una página de "agreement" — el zip
@@ -72,7 +75,15 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --no-deps nnunetv2==2.6.2
+
+RUN pip install --no-cache-dir --no-deps intensity-normalization==2.2.4 pymedio "pydicom<3" && \
+    pip install --no-cache-dir statsmodels && \
+    python -c "import importlib.util, pathlib; \
+p = pathlib.Path(importlib.util.find_spec('pymedio').submodule_search_locations[0]) / 'base.py'; \
+p.write_text(p.read_text().replace('class BasicImage(npt.NDArray[miot.DType]):', 'class BasicImage(np.ndarray):'))" && \
+    python -c "from intensity_normalization.normalize import kde; print('KDE normalization OK')"
 
 # ─── Código de la aplicación ──────────────────────────────────────────────────
 COPY app/ ./app/

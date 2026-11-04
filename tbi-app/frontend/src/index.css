@@ -347,6 +347,8 @@ body { font-family:'Outfit',system-ui,sans-serif; background:var(--bg); color:va
   letter-spacing:.6px; margin-bottom:12px;
 }
 .about-p { font-size:14.5px; color:var(--t2); line-height:1.65; }
+.about-link { color:var(--primary); font-weight:600; text-decoration:underline; }
+.about-link:hover { opacity:.8; }
 .about-grid {
   display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
 }
@@ -525,19 +527,6 @@ body { font-family:'Outfit',system-ui,sans-serif; background:var(--bg); color:va
 @media(max-width: 880px) {
   .niivue-toolbar { gap: 10px; }
 }
-/* R/L orientation labels (radiological convention: patient's right on the left) */
-.niivue-orient {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #fde047;
-  font-size: 15px;
-  font-weight: 700;
-  pointer-events: none;
-  text-shadow: 0 0 3px #000;
-}
-.niivue-orient-left  { left: 10px; }
-.niivue-orient-right { right: 10px; }
 .niivue-loading {
   position: absolute;
   inset: 0;

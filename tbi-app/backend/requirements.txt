@@ -2,31 +2,46 @@
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 python-multipart==0.0.12
+pydantic==2.9.2
 
 # ─── NIfTI / neuroimaging ─────────────────────────────────────────────────────
-# nibabel pinned <4 — required by intensity-normalization==2.2.4 (see below).
-nibabel==3.2.2
-numpy==1.26.4
+nibabel==5.4.2
+numpy==2.4.6
+scipy==1.16.3
 
 # ─── PyTorch (nnU-Net backend) ─────────────────────────────────────────────────
 # CPU base — if a NVIDIA GPU is available at runtime, torch.cuda.is_available()
 # returns True automatically and nnUNetPredictor uses it.
-torch==2.3.1+cpu
+torch==2.11.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # ─── nnU-Net segmentation (TBI lesion model) ─────────────────────────────────
-# 3D fullres pipeline with transfer learning from the TBI model (Castaño 2025).
+# nnunetv2==2.6.2 itself is installed in the Dockerfile with --no-deps, as in
+# Colab: the PyPI release requires dynamic-network-architectures>=0.4.1, while
+# the model's src/ (same 2.6.2 base) pins 0.3.1. The inference code is
+# identical; only the Primus trainers (not used here) need 0.4.
+# Dependency list copied from the Colab install cell.
 # CPU inference works but is slow (~15-30 min); with NVIDIA GPU <60s.
-nnunetv2==2.5.1
-SimpleITK==2.4.0       # NIfTI I/O used internally by nnU-Net
+dynamic-network-architectures==0.3.1
+acvl-utils==0.2.5
+batchgenerators==0.25.6
+batchgeneratorsv2>=0.3.0
+blosc2>=3.0.0
+einops
+SimpleITK==2.5.7       # NIfTI I/O used internally by nnU-Net
+scikit-image==0.25.2
+scikit-learn==1.6.1
+pandas
+matplotlib
+seaborn
+tifffile
+imagecodecs
+yacs
+graphviz
+requests
+tqdm
 
-# The checkpoint was trained with a custom "KdeNormalization" preprocessing
-# class (app/pipelines/nnunet_normalization.py) that wraps this package's KDE
-# tissue-mode normalizer. Pulls in scikit-learn/scikit-image/scipy/statsmodels
-# etc. as transitive deps — left unpinned so pip can resolve compatible
-# versions against nnunetv2's own requirements.
-intensity-normalization==2.2.4
-
-# ─── Utilities ────────────────────────────────────────────────────────────────
-pydantic==2.9.2
-scipy==1.13.1
+# intensity-normalization==2.2.4 (KdeNormalization, see
+# app/pipelines/nnunet_normalization.py) is installed in the Dockerfile with
+# --no-deps, as in Colab: its pinned deps (numpy<2, nibabel<4) don't exist for
+# Python 3.13.

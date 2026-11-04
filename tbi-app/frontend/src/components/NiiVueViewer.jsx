@@ -14,12 +14,12 @@ import { postViewerMetrics } from '../api/client.js';
 // orientation (raw T1 without reorientation + nnUNet mask in the same space,
 // which is what the pipeline produces).
 //
-// Axial and coronal views use the RADIOLOGICAL convention, like Mango and most
-// clinical viewers: the patient's right is drawn on the left of the screen
-// (R/L labels on the canvas edges). Rows are also flipped so anterior (axial)
-// and superior (coronal/sagittal) are at the top; slice row 0 is posterior /
-// inferior in RAS. Mirroring and flipping happen only when drawing; the
-// volumes, crop and mask stay untouched.
+// Orientation matches np.rot90(vol[:, :, z]) on the RAS volume (the thesis
+// figures) and Mango: anterior (axial) and superior (coronal/sagittal) at the
+// top, and in axial/coronal the patient's left on the left of the screen.
+// Only the rows are flipped, because slice row 0 is posterior / inferior
+// in RAS. The flip happens only when drawing;
+// the volumes, crop and mask stay untouched.
 //
 // Performance is MEASURED, not estimated: every phase below is timed with
 // performance.now() and POSTed to /viewer-metrics/{job_id}, which prints it to
@@ -27,12 +27,11 @@ import { postViewerMetrics } from '../api/client.js';
 // instrumentation is read-only — it does not throttle, cache or reorder any of
 // the render work, so the numbers describe this exact implementation.
 
-// `mirror`: draw the X axis right→left (radiological convention).
-// Every view also draws its rows bottom→top (see renderSlice).
+// Every view draws its rows bottom→top (see renderSlice).
 const VIEWS = [
-  { key: 'axial',    axis: 2, mirror: true  },   // slices on the Z axis (I-S)
-  { key: 'coronal',  axis: 1, mirror: true  },   // slices on the Y axis (P-A)
-  { key: 'sagittal', axis: 0, mirror: false },   // slices on the X axis (L-R)
+  { key: 'axial',    axis: 2 },   // slices on the Z axis (I-S)
+  { key: 'coronal',  axis: 1 },   // slices on the Y axis (P-A)
+  { key: 'sagittal', axis: 0 },   // slices on the X axis (L-R)
 ];
 
 // Wait this long after the last slider tick before shipping the render stats.
@@ -215,10 +214,10 @@ function sliceBboxFor(axis, bbox3d) {
 
 /**
  * Draw T1 in grayscale + red mask onto a canvas. Row y of the canvas shows row
- * (h-1-y) of the slice, so anterior/superior end up at the top. With `mirror`,
- * column x shows column (w-1-x) of the slice (radiological convention).
+ * (h-1-y) of the slice, so anterior/superior end up at the top (same as
+ * np.rot90 on the RAS volume).
  */
-function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max, mirror) {
+function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max) {
   const { w, h, pixels: t1 } = t1Slice;
   canvas.width  = w;
   canvas.height = h;
@@ -231,7 +230,7 @@ function renderSlice(canvas, t1Slice, maskSlice, showMask, opacity, t1Min, t1Max
     // p = canvas pixel, i = source voxel of the slice
     const col = p % w;
     const srcRow = h - 1 - ((p - col) / w);
-    const i = srcRow * w + (mirror ? w - 1 - col : col);
+    const i = srcRow * w + col;
     // Normalize T1 to 0-255
     let v = (t1[i] - t1Min) / range;
     v = Math.max(0, Math.min(1, v));
@@ -495,7 +494,7 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
   // triggered by every slider tick, view switch, mask toggle and opacity change.
   useEffect(() => {
     if (!t1Ref.current || !canvasRef.current) return;
-    const { axis, mirror } = VIEWS.find((v) => v.key === viewKey);
+    const { axis } = VIEWS.find((v) => v.key === viewKey);
 
     const tSlice0 = performance.now();
     let t1Slice   = sliceVolume(t1Ref.current, axis, sliceIdx);
@@ -512,7 +511,7 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
     const tCrop1 = performance.now();
 
     const [lo, hi]  = rangeRef.current;
-    renderSlice(canvasRef.current, t1Slice, maskSlice, showOverlay, opacity, lo, hi, mirror);
+    renderSlice(canvasRef.current, t1Slice, maskSlice, showOverlay, opacity, lo, hi);
     const tDraw1 = performance.now();
 
     const sample = {
@@ -621,12 +620,6 @@ const NiiVueViewer = ({ t1Url, maskUrl, jobId, onError }) => {
           </div>
         )}
         <canvas ref={canvasRef} className="niivue-canvas" />
-        {!loading && !errorMsg && VIEWS.find((v) => v.key === viewKey).mirror && (
-          <>
-            <span className="niivue-orient niivue-orient-left">R</span>
-            <span className="niivue-orient niivue-orient-right">L</span>
-          </>
-        )}
       </div>
 
       <div className="niivue-hint">{t('viewer.hint')}</div>
