@@ -178,7 +178,7 @@ export const TRANSLATIONS = {
 
 'models.nnunet.name': 'nnUNet',
     'models.nnunet.fullName': 'Modelo nnUNet (Segmentación)',
-    'models.nnunet.desc': 'Red de segmentación que localiza y genera una máscara de las afectadas en la imagen T1.',
+    'models.nnunet.desc': 'Red de segmentación que localiza y genera una máscara de las zonas afectadas en la imagen T1.',
     'models.nnunet.tooltip': 'DSC Medio de 61.6 % (Dice Similarity Coefficient) — superposición entre la segmentación predicha y la real.',
 
     'about.title': 'Acerca de la herramienta',
