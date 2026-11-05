@@ -127,11 +127,13 @@ def get_predictor():
     # Configuration for CPU inference:
     #  - tile_step_size=0.5  → nnU-Net default, same as the nnUNetv2_predict
     #                          run used for the reported metrics
-    #  - use_mirroring=False → disables flip-based TTA (8× slower on CPU)
+    #  - use_mirroring=True  → flip-based TTA (8 flips averaged), same as the
+    #                          nnUNetv2_predict run used for the reported
+    #                          metrics. Slower on CPU (~8× the nnU-Net stage).
     predictor = nnUNetPredictor(
         tile_step_size=0.5,
         use_gaussian=True,
-        use_mirroring=False,
+        use_mirroring=True,
         perform_everything_on_device=use_gpu,
         device=torch.device(DEVICE),
         verbose=False,
