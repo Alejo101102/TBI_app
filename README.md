@@ -105,7 +105,7 @@ Minimum (CPU-only, recommended for the thesis demo):
 - **Docker Desktop**: 4.20 or newer
 - **RAM allocated to Docker**: 6 GB (8 GB recommended for nnU-Net inference)
 - **Disk space**: 10 GB free (Docker images ~3 GB + trained model ~235 MB + ANTs ~2 GB + intermediate files)
-- **CPU**: any modern x86-64 (Intel/AMD); nnU-Net inference on CPU takes a few minutes per case, and the optional preprocessing adds roughly 15–35 minutes
+- **CPU**: any modern x86-64 (Intel/AMD); nnU-Net inference with test-time mirroring takes about 9–12 minutes per case on CPU, and the optional preprocessing adds roughly 30–35 minutes
 - **Network**: required only for the first build (pulling base images and Python/Node packages)
 
 Optional (much faster inference):
@@ -152,7 +152,8 @@ The upload screen has a single toggle, **"Preprocess the T1 (ROBEX + registratio
 Notes:
 
 - With the toggle on, the mask stays in SRI24 space and the viewer shows it over the **registered** T1, not over the original upload.
-- On CPU, ROBEX takes about 2–5 min and the SyN registration about 10–30 min per subject, on top of the nnU-Net inference.
+- On CPU, ROBEX takes about 2 min and the SyN registration (ANTs 2.5.4) about 29–36 min per subject, on top of the nnU-Net inference, for a total of about 40–50 min.
+- ANTs 2.5.4 was kept because, in the tests with three raw subjects, it was the only version (compared with 2.6.2 and 2.6.5) that detected the small lesion. Registration results depend on the ANTs version and include random sampling, so masks from raw T1s can differ slightly from those obtained with the preprocessed images.
 - If ROBEX or the registration fails, the job stops with an error instead of sending an unprocessed T1 to the model.
 - Required files:
   - ROBEX: `backend/vendor/ROBEXv12.linux64.tar.gz` (download from [NITRC](https://www.nitrc.org/projects/robex) after accepting its license).
@@ -274,7 +275,7 @@ tbi-app/
 ## Usage notes
 
 - **Accepted input**: a single T1-weighted volume in NIfTI format, either already skull-stripped and registered to SRI24, or raw (with preprocessing enabled). Maximum upload size 500 MB.
-- **Processing time on CPU**: a few minutes for the segmentation, plus roughly 15–35 minutes when preprocessing is enabled. The progress bar advances within each step.
+- **Processing time on CPU**: about 9–12 minutes for an already preprocessed T1, and about 40–50 minutes for a raw T1 with preprocessing enabled. The progress bar advances within each step.
 - **Preprocessing (ROBEX + SRI24 registration)**: off by default. Enable it for raw T1s; leave it off for T1s that are already skull-stripped and registered to SRI24. See [Preprocessing](#preprocessing-robex--sri24-registration).
 - **Viewer orientation**: anterior is at the top of the axial view and superior at the top of the coronal and sagittal views. In axial and coronal views the patient's left is on the left of the screen, the same orientation as `np.rot90` on the RAS volume and as Mango. The slice is scaled to fill the viewer.
 - **Mask download**: the segmentation pipeline writes the mask to `backend/tmp/<job_id>/nnunet_out/subject.nii.gz`. The download button serves it via `/api/v1/mask/<job_id>`.
@@ -293,7 +294,8 @@ Key known limitations (test set: 57 images with 230 ground-truth lesions; a lesi
 - **High false-positive rate.** About two out of three predicted lesions (67.7 %) do not match any ground-truth lesion, with an average of 2.6 false-positive components per subject. Many are small fragments, so every predicted region must be checked visually.
 - **Moderate overlap.** The mean Dice is 61.6 % (IoU 55.4 %): the model localizes most medium and large lesions, but their borders do not match the reference exactly.
 - **Input must match training.** The model expects T1 images skull-stripped and registered to SRI24. Raw T1s must go through the optional preprocessing (ROBEX + ANTs SyN), and its quality (failed skull stripping or misregistration) directly affects the result. With preprocessing enabled, the mask is shown in SRI24 space, not in the original space of the upload.
-- **Inference settings differ slightly from the evaluation.** To keep CPU times reasonable the app runs nnU-Net without test-time mirroring, so its masks can differ slightly from those used to compute the reported metrics.
+- **Same inference settings as the evaluation.** The app runs nnU-Net with test-time mirroring, as in the evaluation of the model, so with preprocessed T1s it reproduces the evaluation masks exactly. Mirroring makes the segmentation step slower on CPU (about 9–12 minutes instead of 1–2).
+- **Raw T1s depend on the registration.** With preprocessing enabled, the ANTs registration does not reproduce exactly the one of the preprocessed images, so the number of false positives can change and small lesions may be missed or appear slightly displaced.
 
 ---
 
